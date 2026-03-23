@@ -2,16 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { makeReq, makeVerifiedUser, mockAuthed, mockUnauthed } from "../helpers";
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Hoist mock factories
 // ---------------------------------------------------------------------------
-const mockRequireVerifiedAuth = vi.fn();
-vi.mock("@/lib/auth", () => ({
-  requireVerifiedAuth: mockRequireVerifiedAuth,
+const { mockRequireVerifiedAuth, mockFindFirst, mockUpdate, mockDelete } = vi.hoisted(() => ({
+  mockRequireVerifiedAuth: vi.fn(),
+  mockFindFirst: vi.fn(),
+  mockUpdate: vi.fn(),
+  mockDelete: vi.fn(),
 }));
 
-const mockFindFirst = vi.fn();
-const mockUpdate = vi.fn();
-const mockDelete = vi.fn();
+vi.mock("@/lib/auth", () => ({ requireVerifiedAuth: mockRequireVerifiedAuth }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     category: {

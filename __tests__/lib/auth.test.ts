@@ -1,18 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---------------------------------------------------------------------------
-// Mock dependencies before importing the module under test
+// Hoist mock factories so they are available when vi.mock() factories run
 // ---------------------------------------------------------------------------
-const mockFindUnique = vi.fn();
-const mockPrismaUserSession = { findUnique: mockFindUnique };
+const { mockFindUnique, mockCookiesGet } = vi.hoisted(() => ({
+  mockFindUnique: vi.fn(),
+  mockCookiesGet: vi.fn(),
+}));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    userSession: mockPrismaUserSession,
+    userSession: { findUnique: mockFindUnique },
   },
 }));
 
-const mockCookiesGet = vi.fn();
 vi.mock("next/headers", () => ({
   cookies: vi.fn(() => Promise.resolve({ get: mockCookiesGet })),
 }));

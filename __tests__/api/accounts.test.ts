@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { makeReq, makeVerifiedUser, mockAuthed, mockUnauthed } from "../helpers";
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Hoist mock factories so they are available at vi.mock() call time
 // ---------------------------------------------------------------------------
-const mockRequireVerifiedAuth = vi.fn();
-vi.mock("@/lib/auth", () => ({
-  requireVerifiedAuth: mockRequireVerifiedAuth,
+const { mockRequireVerifiedAuth, mockFindMany, mockCreate } = vi.hoisted(() => ({
+  mockRequireVerifiedAuth: vi.fn(),
+  mockFindMany: vi.fn(),
+  mockCreate: vi.fn(),
 }));
 
-const mockFindMany = vi.fn();
-const mockCreate = vi.fn();
+vi.mock("@/lib/auth", () => ({ requireVerifiedAuth: mockRequireVerifiedAuth }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     account: {
@@ -20,7 +20,6 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-// Import after mocks
 import { GET, POST } from "@/app/api/accounts/route";
 
 const user = makeVerifiedUser();

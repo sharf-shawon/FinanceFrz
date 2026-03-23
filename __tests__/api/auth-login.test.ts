@@ -1,11 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { makeReq } from "../helpers";
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Hoist mock factories
 // ---------------------------------------------------------------------------
-const mockUserFindUnique = vi.fn();
-const mockSessionCreate = vi.fn();
+const {
+  mockUserFindUnique,
+  mockSessionCreate,
+  mockBcryptCompare,
+  mockGenerateToken,
+} = vi.hoisted(() => ({
+  mockUserFindUnique: vi.fn(),
+  mockSessionCreate: vi.fn(),
+  mockBcryptCompare: vi.fn(),
+  mockGenerateToken: vi.fn(() => "test-session-token"),
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: { findUnique: mockUserFindUnique },
@@ -13,22 +23,14 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-// bcryptjs compare
 vi.mock("bcryptjs", () => ({
-  default: {
-    compare: vi.fn(),
-    hash: vi.fn(),
-  },
-  compare: vi.fn(),
+  default: { compare: mockBcryptCompare, hash: vi.fn() },
+  compare: mockBcryptCompare,
   hash: vi.fn(),
 }));
 
-const { default: bcrypt } = await import("bcryptjs");
-const bcryptCompare = bcrypt.compare as ReturnType<typeof vi.fn>;
-
-// generateToken
 vi.mock("@/lib/auth", () => ({
-  generateToken: vi.fn(() => "test-session-token"),
+  generateToken: mockGenerateToken,
 }));
 
 import { POST } from "@/app/api/auth/login/route";
