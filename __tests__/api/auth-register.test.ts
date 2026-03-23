@@ -2,11 +2,26 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { makeReq } from "../helpers";
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Hoist mock factories
 // ---------------------------------------------------------------------------
-const mockUserFindUnique = vi.fn();
-const mockUserCreate = vi.fn();
-const mockTokenCreate = vi.fn();
+const {
+  mockUserFindUnique,
+  mockUserCreate,
+  mockTokenCreate,
+  mockBcryptHash,
+  mockGenerateToken,
+  mockSendEmail,
+  mockGetVerificationEmailHtml,
+} = vi.hoisted(() => ({
+  mockUserFindUnique: vi.fn(),
+  mockUserCreate: vi.fn(),
+  mockTokenCreate: vi.fn(),
+  mockBcryptHash: vi.fn(async () => "hashed_password"),
+  mockGenerateToken: vi.fn(() => "verify-token-abc"),
+  mockSendEmail: vi.fn(async () => {}),
+  mockGetVerificationEmailHtml: vi.fn(() => "<p>verify</p>"),
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: {
@@ -18,21 +33,18 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("bcryptjs", () => ({
-  default: {
-    hash: vi.fn(async () => "hashed_password"),
-    compare: vi.fn(),
-  },
-  hash: vi.fn(async () => "hashed_password"),
+  default: { hash: mockBcryptHash, compare: vi.fn() },
+  hash: mockBcryptHash,
   compare: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
-  generateToken: vi.fn(() => "verify-token-abc"),
+  generateToken: mockGenerateToken,
 }));
 
 vi.mock("@/lib/email", () => ({
-  sendEmail: vi.fn(async () => {}),
-  getVerificationEmailHtml: vi.fn(() => "<p>verify</p>"),
+  sendEmail: mockSendEmail,
+  getVerificationEmailHtml: mockGetVerificationEmailHtml,
 }));
 
 import { POST } from "@/app/api/auth/register/route";
@@ -76,15 +88,14 @@ describe("POST /api/auth/register", () => {
     mockUserCreate.mockResolvedValue({ id: "new-user", email: "new@b.com", name: null });
     mockTokenCreate.mockResolvedValue({});
 
-    const { sendEmail } = await import("@/lib/email");
     const res = await POST(
       makeReq("/api/auth/register", "POST", { email: "new@b.com", password: "password123" })
     );
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.message).toContain("email");
-    expect(sendEmail).toHaveBeenCalledOnce();
-    expect((sendEmail as ReturnType<typeof vi.fn>).mock.calls[0][0].to).toBe("new@b.com");
+    expect(mockSendEmail).toHaveBeenCalledOnce();
+    expect(mockSendEmail.mock.calls[0][0].to).toBe("new@b.com");
   });
 
   it("creates user with optional name field", async () => {

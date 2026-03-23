@@ -73,7 +73,7 @@ describe("POST /api/auth/login", () => {
 
   it("returns 401 when password is incorrect", async () => {
     mockUserFindUnique.mockResolvedValue(BASE_USER);
-    bcryptCompare.mockResolvedValue(false);
+    mockBcryptCompare.mockResolvedValue(false);
     const res = await POST(
       makeReq("/api/auth/login", "POST", { email: "a@b.com", password: "wrong" })
     );
@@ -82,7 +82,7 @@ describe("POST /api/auth/login", () => {
 
   it("returns 403 when email is not verified", async () => {
     mockUserFindUnique.mockResolvedValue({ ...BASE_USER, emailVerifiedAt: null });
-    bcryptCompare.mockResolvedValue(true);
+    mockBcryptCompare.mockResolvedValue(true);
     const res = await POST(
       makeReq("/api/auth/login", "POST", { email: "a@b.com", password: "correct" })
     );
@@ -91,7 +91,7 @@ describe("POST /api/auth/login", () => {
 
   it("returns 200 with user data and sets session cookie on success", async () => {
     mockUserFindUnique.mockResolvedValue(BASE_USER);
-    bcryptCompare.mockResolvedValue(true);
+    mockBcryptCompare.mockResolvedValue(true);
     mockSessionCreate.mockResolvedValue({});
     const res = await POST(
       makeReq("/api/auth/login", "POST", { email: "a@b.com", password: "correct" })
@@ -107,7 +107,7 @@ describe("POST /api/auth/login", () => {
 
   it("session cookie is HttpOnly", async () => {
     mockUserFindUnique.mockResolvedValue(BASE_USER);
-    bcryptCompare.mockResolvedValue(true);
+    mockBcryptCompare.mockResolvedValue(true);
     mockSessionCreate.mockResolvedValue({});
     const res = await POST(
       makeReq("/api/auth/login", "POST", { email: "a@b.com", password: "correct" })

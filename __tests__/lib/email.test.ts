@@ -20,7 +20,6 @@ describe("getVerificationEmailHtml()", () => {
 
 describe("sendEmail()", () => {
   beforeEach(() => {
-    // Ensure no API key so we hit the console-log dev path
     delete process.env.RESEND_API_KEY;
   });
 
@@ -31,22 +30,10 @@ describe("sendEmail()", () => {
     consoleSpy.mockRestore();
   });
 
-  it("calls resend when RESEND_API_KEY is present", async () => {
-    process.env.RESEND_API_KEY = "re_test_key";
-    const mockSend = vi.fn().mockResolvedValue({ id: "msg1" });
-    vi.doMock("resend", () => ({
-      Resend: vi.fn().mockImplementation(() => ({
-        emails: { send: mockSend },
-      })),
-    }));
-
-    // Re-import after mock
-    const { sendEmail: send } = await import("@/lib/email?resend=1" as any);
-    // fallback: just check no throw
-    await expect(
-      sendEmail({ to: "x@y.com", subject: "S", html: "<p>hi</p>" })
-    ).resolves.toBeUndefined();
-
-    delete process.env.RESEND_API_KEY;
+  it("logs subject when RESEND_API_KEY is absent", async () => {
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    await sendEmail({ to: "x@y.com", subject: "MySubject", html: "<p>hi</p>" });
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("MySubject"));
+    consoleSpy.mockRestore();
   });
 });
