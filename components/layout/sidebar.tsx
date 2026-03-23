@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   CreditCard,
@@ -17,27 +18,30 @@ import {
   Sun,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/accounts", label: "Accounts", icon: CreditCard },
-  { href: "/categories", label: "Categories", icon: Tags },
-  { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/calendar", label: "Calendar", icon: Calendar },
-];
 
 interface SidebarProps {
   user: { name?: string | null; email: string };
   theme: string;
   onThemeToggle: () => void;
+  locale: string;
 }
 
-export function Sidebar({ user, theme, onThemeToggle }: SidebarProps) {
+export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
+  const t = useTranslations("nav");
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = [
+    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+    { href: "/accounts", label: t("accounts"), icon: CreditCard },
+    { href: "/categories", label: t("categories"), icon: Tags },
+    { href: "/transactions", label: t("transactions"), icon: ArrowLeftRight },
+    { href: "/analytics", label: t("analytics"), icon: BarChart3 },
+    { href: "/calendar", label: t("calendar"), icon: Calendar },
+  ];
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -85,9 +89,10 @@ export function Sidebar({ user, theme, onThemeToggle }: SidebarProps) {
           <Button variant="ghost" size="icon" onClick={onThemeToggle} aria-label="Toggle theme">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
+          <LanguageSwitcher currentLocale={locale} />
           <Button variant="ghost" size="sm" onClick={handleLogout} className="flex-1 justify-start gap-2">
             <LogOut className="h-4 w-4" />
-            Logout
+            {t("logout")}
           </Button>
         </div>
       </div>

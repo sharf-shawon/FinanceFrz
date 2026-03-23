@@ -6,9 +6,10 @@ import { Sidebar } from "./sidebar";
 interface DashboardShellProps {
   children: React.ReactNode;
   user: { name?: string | null; email: string };
+  locale: string;
 }
 
-export function DashboardShell({ children, user }: DashboardShellProps) {
+export function DashboardShell({ children, user, locale }: DashboardShellProps) {
   const [theme, setTheme] = useState<string>("light");
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar user={user} theme={theme} onThemeToggle={toggleTheme} />
+      <Sidebar user={user} theme={theme} onThemeToggle={toggleTheme} locale={locale} />
       <main className="md:pl-64">
         <div className="px-4 py-6 pt-16 md:pt-6 md:px-6 lg:px-8">
           {children}

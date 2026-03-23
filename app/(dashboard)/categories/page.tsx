@@ -72,7 +72,7 @@ export default function CategoriesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this category? Transactions using it will also be deleted.")) return;
+    if (!confirm("Delete this category? All transactions linked to it will also be permanently deleted (cascade). This cannot be undone.")) return;
     await fetch(`/api/categories/${id}`, { method: "DELETE" });
     fetchCategories();
   }

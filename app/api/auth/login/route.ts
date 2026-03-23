@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { generateToken } from "@/lib/auth";
 
+// NOTE: In-memory rate limiting is intentional for this single-instance dev/hobby deployment.
+// For production multi-instance deployments, replace with a persistent store (Redis, DB table).
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
