@@ -158,7 +158,7 @@ export default function TransactionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-muted-foreground">{total} {t("title").toLowerCase()}</p>
+          <p className="text-muted-foreground">{t("subtitle", { total })}</p>
         </div>
         <Button onClick={openCreate} className="gap-2">
           <Plus className="h-4 w-4" /> {t("addTransaction")}

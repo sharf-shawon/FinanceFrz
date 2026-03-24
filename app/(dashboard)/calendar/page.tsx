@@ -32,6 +32,7 @@ function getDayColor(income: number, expense: number): string {
 export default function CalendarPage() {
   const t = useTranslations("calendar");
   const tc = useTranslations("common");
+  const ttxn = useTranslations("transactions");
 
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [month, setMonth] = useState(() => new Date().getMonth());
@@ -189,7 +190,7 @@ export default function CalendarPage() {
                     <div className="flex items-center gap-2">
                       <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: txn.category?.color ?? "#6b7280" }} />
                       <div>
-                        <p className="text-sm font-medium">{txn.description ?? txn.category?.name ?? "Uncategorized"}</p>
+                        <p className="text-sm font-medium">{txn.description ?? txn.category?.name ?? ttxn("uncategorized")}</p>
                         <p className="text-xs text-muted-foreground">{txn.account.name}</p>
                       </div>
                     </div>

@@ -11,6 +11,7 @@ export default async function DashboardPage() {
   const user = await requireVerifiedAuth();
   const t = await getTranslations("dashboard");
   const tnav = await getTranslations("nav");
+  const ttxn = await getTranslations("transactions");
 
   const now = new Date();
   const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -110,7 +111,7 @@ export default async function DashboardPage() {
                         style={{ backgroundColor: txn.category?.color ?? "#6b7280" }}
                       />
                       <div>
-                        <p className="text-sm font-medium">{txn.description ?? txn.category?.name ?? "Uncategorized"}</p>
+                        <p className="text-sm font-medium">{txn.description ?? txn.category?.name ?? ttxn("uncategorized")}</p>
                         <p className="text-xs text-muted-foreground">
                           {txn.account.name} · {new Date(txn.date).toLocaleDateString()}
                         </p>
