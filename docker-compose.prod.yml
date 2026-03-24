@@ -6,7 +6,7 @@ services:
       target: runner
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}
+      - DATABASE_URL=${DATABASE_URL_PROD:-file:/app/data/prod.db}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - RESEND_API_KEY=${RESEND_API_KEY}

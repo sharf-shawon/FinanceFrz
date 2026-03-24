@@ -35,7 +35,7 @@ docker compose -f docker-compose.prod.yml up -d
 ```
 
 The production image in this repository is configured for SQLite/libSQL URLs.
-Use a `DATABASE_URL` such as `file:./data/prod.db` (default in `docker-compose.prod.yml`).
+Set `DATABASE_URL_PROD` to a value such as `file:/app/data/prod.db` (this is the compose default).
 
 ## Testing
 
