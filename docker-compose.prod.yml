@@ -12,9 +12,3 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-noreply@financefrz.com}
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/locale"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
