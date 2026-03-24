@@ -36,7 +36,7 @@ docker compose -f docker-compose.prod.yml up -d
 
 The production image in this repository is configured for SQLite/libSQL URLs.
 Set `DATABASE_URL_PROD` to a value such as `file:/app/data/prod.db` (this is the compose default).
-On container startup, Prisma runs `db push` automatically to ensure required SQLite tables exist.
+On container startup, the app initializes SQLite schema from `prisma/migrations` automatically.
 
 ## Testing
 
