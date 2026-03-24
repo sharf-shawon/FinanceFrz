@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     // Category breakdown
     const categoryMap = new Map<string, { name: string; color: string; total: number }>();
     for (const t of transactions) {
-      if (t.type === "expense") {
+      if (t.type === "expense" && t.categoryId && t.category) {
         const existing = categoryMap.get(t.categoryId);
         if (existing) {
           existing.total += t.amount;
