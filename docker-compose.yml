@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=file:./dev.db
+      - NEXTAUTH_SECRET=dev-secret-change-me
+      - NEXTAUTH_URL=http://localhost:3000
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@financefrz.com}
+    restart: unless-stopped

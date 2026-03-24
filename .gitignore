@@ -9,3 +9,5 @@ node_modules
 app/generated/
 .next/
 tsconfig.tsbuildinfo
+coverage/
+
