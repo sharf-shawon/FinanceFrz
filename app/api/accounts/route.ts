@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const schema = z.object({
   name: z.string().min(1),
-  type: z.enum(["cash", "bank", "credit_card", "savings", "investment"]),
+  type: z.enum(["cash", "bank", "mfs", "credit_card", "savings", "investment"]),
   currency: z.string().default("USD"),
 });
 

@@ -42,12 +42,14 @@ export const CATEGORY_COLORS = [
 export const ACCOUNT_TYPES = [
   { value: "cash", label: "Cash" },
   { value: "bank", label: "Bank Account" },
+  { value: "mfs", label: "MFS (Bkash, Nagad, etc.)" },
   { value: "credit_card", label: "Credit Card" },
   { value: "savings", label: "Savings" },
   { value: "investment", label: "Investment" },
 ];
 
 export const CURRENCIES = [
+  { value: "BDT", label: "BDT - Bangladeshi Taka" },
   { value: "USD", label: "USD - US Dollar" },
   { value: "EUR", label: "EUR - Euro" },
   { value: "GBP", label: "GBP - British Pound" },
