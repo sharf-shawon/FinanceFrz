@@ -9,7 +9,7 @@ const schema = z.object({
   currency: z.string().default("USD"),
 });
 
-export async function GET() {
+export async function GET(_req: NextRequest) {
   try {
     const user = await requireVerifiedAuth();
     const accounts = await prisma.account.findMany({

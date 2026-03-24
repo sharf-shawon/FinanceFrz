@@ -95,7 +95,7 @@ describe("POST /api/auth/register", () => {
     const json = await res.json();
     expect(json.message).toContain("email");
     expect(mockSendEmail).toHaveBeenCalledOnce();
-    expect(mockSendEmail.mock.calls[0][0].to).toBe("new@b.com");
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: "new@b.com" }));
   });
 
   it("creates user with optional name field", async () => {

@@ -31,7 +31,7 @@ export function makeReq(
     const sp = new URLSearchParams(searchParams);
     fullUrl += `?${sp.toString()}`;
   }
-  const opts: RequestInit = { method };
+  const opts: { method: string; headers?: Record<string, string>; body?: string } = { method };
   if (body) {
     opts.headers = { "content-type": "application/json" };
     opts.body = JSON.stringify(body);

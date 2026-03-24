@@ -9,7 +9,7 @@ const schema = z.object({
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default("#6366f1"),
 });
 
-export async function GET() {
+export async function GET(_req: NextRequest) {
   try {
     const user = await requireVerifiedAuth();
     const categories = await prisma.category.findMany({
