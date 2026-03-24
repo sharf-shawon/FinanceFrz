@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 
 const LOCALES = [
   { code: "en", label: "EN", fullLabel: "English" },
-  { code: "bn", label: "BN", fullLabel: "বাংলা" },
   { code: "es", label: "ES", fullLabel: "Español" },
+  { code: "bn", label: "BN", fullLabel: "বাংলা" },
 ];
 
 interface LanguageSwitcherProps {
