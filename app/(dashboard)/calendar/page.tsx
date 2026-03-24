@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +16,7 @@ interface DayData {
     type: string;
     amount: number;
     description: string | null;
-    category: { name: string; color: string };
+    category: { name: string; color: string } | null;
     account: { name: string; currency: string };
   }[];
 }
@@ -29,6 +30,10 @@ function getDayColor(income: number, expense: number): string {
 }
 
 export default function CalendarPage() {
+  const t = useTranslations("calendar");
+  const tc = useTranslations("common");
+  const ttxn = useTranslations("transactions");
+
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [month, setMonth] = useState(() => new Date().getMonth());
   const [dayMap, setDayMap] = useState<Record<string, DayData>>({});
@@ -47,12 +52,12 @@ export default function CalendarPage() {
       if (!cancelled && res.ok) {
         const data = await res.json();
         const map: Record<string, DayData> = {};
-        for (const t of data.transactions) {
-          const key = t.date.slice(0, 10);
+        for (const txn of data.transactions) {
+          const key = txn.date.slice(0, 10);
           if (!map[key]) map[key] = { income: 0, expense: 0, transactions: [] };
-          if (t.type === "income") map[key].income += t.amount;
-          else map[key].expense += t.amount;
-          map[key].transactions.push(t);
+          if (txn.type === "income") map[key].income += txn.amount;
+          else map[key].expense += txn.amount;
+          map[key].transactions.push(txn);
         }
         setDayMap(map);
       }
@@ -82,23 +87,23 @@ export default function CalendarPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Calendar</h1>
-        <p className="text-muted-foreground">Daily income &amp; expense overview</p>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       {/* Legend */}
       <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
         <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm bg-green-100 dark:bg-green-950/30 border" /> More income
+          <div className="h-3 w-3 rounded-sm bg-green-100 dark:bg-green-950/30 border" /> {t("moreIncome")}
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm bg-red-100 dark:bg-red-950/30 border" /> More expenses
+          <div className="h-3 w-3 rounded-sm bg-red-100 dark:bg-red-950/30 border" /> {t("moreExpenses")}
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm bg-yellow-50 dark:bg-yellow-950/20 border" /> Balanced
+          <div className="h-3 w-3 rounded-sm bg-yellow-50 dark:bg-yellow-950/20 border" /> {t("balanced")}
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm border" /> No activity
+          <div className="h-3 w-3 rounded-sm border" /> {t("noActivity2")}
         </div>
       </div>
 
@@ -114,7 +119,7 @@ export default function CalendarPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-12 text-center text-muted-foreground">Loading...</div>
+            <div className="py-12 text-center text-muted-foreground">{tc("loading")}</div>
           ) : (
             <div className="grid grid-cols-7 gap-1">
               {weekdays.map((d) => (
@@ -171,33 +176,33 @@ export default function CalendarPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-green-50 dark:bg-green-950/30 p-3">
-                  <p className="text-xs text-muted-foreground">Income</p>
+                  <p className="text-xs text-muted-foreground">{t("income")}</p>
                   <p className="font-semibold text-green-700 dark:text-green-400">{formatCurrency(selectedData.income)}</p>
                 </div>
                 <div className="rounded-lg bg-red-50 dark:bg-red-950/30 p-3">
-                  <p className="text-xs text-muted-foreground">Expenses</p>
+                  <p className="text-xs text-muted-foreground">{t("expense")}</p>
                   <p className="font-semibold text-red-700 dark:text-red-400">{formatCurrency(selectedData.expense)}</p>
                 </div>
               </div>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {selectedData.transactions.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between py-1.5 border-b last:border-0">
+                {selectedData.transactions.map((txn) => (
+                  <div key={txn.id} className="flex items-center justify-between py-1.5 border-b last:border-0">
                     <div className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: t.category.color }} />
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: txn.category?.color ?? "#6b7280" }} />
                       <div>
-                        <p className="text-sm font-medium">{t.description ?? t.category.name}</p>
-                        <p className="text-xs text-muted-foreground">{t.account.name}</p>
+                        <p className="text-sm font-medium">{txn.description ?? txn.category?.name ?? ttxn("uncategorized")}</p>
+                        <p className="text-xs text-muted-foreground">{txn.account.name}</p>
                       </div>
                     </div>
-                    <span className={`text-sm font-semibold ${t.type === "income" ? "text-green-600" : "text-red-600"}`}>
-                      {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, t.account.currency)}
+                    <span className={`text-sm font-semibold ${txn.type === "income" ? "text-green-600" : "text-red-600"}`}>
+                      {txn.type === "income" ? "+" : "-"}{formatCurrency(txn.amount, txn.account.currency)}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-4">No transactions on this day.</p>
+            <p className="text-center text-muted-foreground py-4">{t("noActivity")}</p>
           )}
         </DialogContent>
       </Dialog>

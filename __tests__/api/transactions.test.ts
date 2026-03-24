@@ -28,7 +28,7 @@ vi.mock("@/lib/prisma", () => ({
 import { GET, POST } from "@/app/api/transactions/route";
 
 const user = makeVerifiedUser();
-const account = { id: "acc1", name: "Checking", currency: "USD", userId: user.id };
+const account = { id: "acc1", name: "Checking", currency: "BDT", userId: user.id };
 const category = { id: "cat1", name: "Food", color: "#ef4444", type: "expense", userId: user.id };
 
 beforeEach(() => {
@@ -139,6 +139,14 @@ describe("POST /api/transactions", () => {
     description: "Lunch",
   };
 
+  const uncategorizedBody = {
+    accountId: "acc1",
+    type: "expense",
+    amount: 50.0,
+    date: "2024-06-01T12:00:00Z",
+    description: "Uncategorized expense",
+  };
+
   it("returns 401 when unauthenticated", async () => {
     mockUnauthed(mockRequireVerifiedAuth);
     const res = await POST(makeReq("/api/transactions", "POST", validBody));
@@ -161,17 +169,14 @@ describe("POST /api/transactions", () => {
 
   it("returns 400 when account does not belong to user", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
-    // findFirst returns null for account, not null for category
-    mockFindFirst
-      .mockResolvedValueOnce(null) // account → not found
-      .mockResolvedValueOnce(category); // category → found
+    mockFindFirst.mockResolvedValueOnce(null); // account → not found
     const res = await POST(makeReq("/api/transactions", "POST", validBody));
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("Account");
   });
 
-  it("returns 400 when category does not belong to user", async () => {
+  it("returns 400 when category is provided but does not belong to user", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
     mockFindFirst
       .mockResolvedValueOnce(account) // account → found
@@ -182,7 +187,7 @@ describe("POST /api/transactions", () => {
     expect(json.error).toContain("Category");
   });
 
-  it("creates transaction and returns 201", async () => {
+  it("creates transaction with category and returns 201", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
     mockFindFirst
       .mockResolvedValueOnce(account)
@@ -199,6 +204,57 @@ describe("POST /api/transactions", () => {
     expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.id).toBe("t1");
+  });
+
+  it("creates uncategorized transaction (null categoryId) and returns 201", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindFirst.mockResolvedValueOnce(account); // only account lookup
+    const created = {
+      id: "t2",
+      ...uncategorizedBody,
+      categoryId: null,
+      category: null,
+      account,
+      userId: user.id,
+    };
+    mockCreate.mockResolvedValue(created);
+    const res = await POST(makeReq("/api/transactions", "POST", uncategorizedBody));
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.id).toBe("t2");
+    expect(json.category).toBeNull();
+  });
+
+  it("creates transaction with explicit null categoryId and returns 201", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindFirst.mockResolvedValueOnce(account);
+    const created = {
+      id: "t3",
+      ...uncategorizedBody,
+      categoryId: null,
+      category: null,
+      account,
+      userId: user.id,
+    };
+    mockCreate.mockResolvedValue(created);
+    const res = await POST(
+      makeReq("/api/transactions", "POST", { ...uncategorizedBody, categoryId: null })
+    );
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.categoryId).toBeNull();
+  });
+
+  it("passes null categoryId to prisma.create when uncategorized", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindFirst.mockResolvedValueOnce(account);
+    mockCreate.mockResolvedValue({ id: "t4", categoryId: null, category: null, account });
+    await POST(makeReq("/api/transactions", "POST", uncategorizedBody));
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ categoryId: null }),
+      })
+    );
   });
 
   it("returns 500 on unexpected errors", async () => {

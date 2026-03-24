@@ -4,6 +4,7 @@ import {
   formatCurrency,
   formatDate,
   CATEGORY_COLORS,
+  getRandomCategoryColor,
   ACCOUNT_TYPES,
   CURRENCIES,
 } from "@/lib/utils";
@@ -31,8 +32,14 @@ describe("cn()", () => {
 });
 
 describe("formatCurrency()", () => {
-  it("formats USD by default", () => {
+  it("formats BDT by default", () => {
     const result = formatCurrency(1234.5);
+    // BDT uses ৳ symbol and formats numbers
+    expect(result).toContain("1,234.50");
+  });
+
+  it("formats USD correctly when specified", () => {
+    const result = formatCurrency(1234.5, "USD");
     expect(result).toContain("1,234.50");
     expect(result).toContain("$");
   });
@@ -81,15 +88,34 @@ describe("formatDate()", () => {
 });
 
 describe("CATEGORY_COLORS", () => {
-  it("is a non-empty array", () => {
+  it("is a non-empty array with at least 50 entries", () => {
     expect(Array.isArray(CATEGORY_COLORS)).toBe(true);
-    expect(CATEGORY_COLORS.length).toBeGreaterThan(0);
+    expect(CATEGORY_COLORS.length).toBeGreaterThanOrEqual(50);
   });
 
   it("all entries are valid hex colours", () => {
     for (const color of CATEGORY_COLORS) {
       expect(color).toMatch(/^#[0-9A-Fa-f]{6}$/);
     }
+  });
+
+  it("contains no duplicate colors", () => {
+    const unique = new Set(CATEGORY_COLORS);
+    expect(unique.size).toBe(CATEGORY_COLORS.length);
+  });
+});
+
+describe("getRandomCategoryColor()", () => {
+  it("returns a valid hex color from CATEGORY_COLORS", () => {
+    const color = getRandomCategoryColor();
+    expect(color).toMatch(/^#[0-9A-Fa-f]{6}$/);
+    expect(CATEGORY_COLORS).toContain(color);
+  });
+
+  it("returns different colors on repeated calls (probabilistic)", () => {
+    // With 50+ colors, the probability that 20 calls all return the same color is ~(1/50)^19 ≈ 0
+    const colors = new Set(Array.from({ length: 20 }, () => getRandomCategoryColor()));
+    expect(colors.size).toBeGreaterThan(1);
   });
 });
 
@@ -110,6 +136,10 @@ describe("CURRENCIES", () => {
       expect(entry).toHaveProperty("value");
       expect(entry).toHaveProperty("label");
     }
+  });
+
+  it("includes BDT as the first/default currency", () => {
+    expect(CURRENCIES[0].value).toBe("BDT");
   });
 
   it("includes USD", () => {
