@@ -29,7 +29,13 @@ export async function GET(req: NextRequest) {
     const sortBy = searchParams.get("sortBy") ?? "date";
     const sortDir = searchParams.get("sortDir") ?? "desc";
 
-    const where: any = { userId: user.id };
+    const where: {
+      userId: string;
+      accountId?: string;
+      categoryId?: string;
+      type?: string;
+      date?: { gte?: Date; lte?: Date };
+    } = { userId: user.id };
     if (accountId) where.accountId = accountId;
     if (categoryId) where.categoryId = categoryId;
     if (type) where.type = type;
@@ -54,9 +60,10 @@ export async function GET(req: NextRequest) {
     ]);
 
     return NextResponse.json({ transactions, total, page, limit });
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -91,9 +98,10 @@ export async function POST(req: NextRequest) {
       },
     });
     return NextResponse.json(transaction, { status: 201 });
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

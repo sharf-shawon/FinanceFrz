@@ -13,20 +13,18 @@ export default function VerifyEmailContent() {
   const token = searchParams.get("token");
   const pending = searchParams.get("pending");
   const [status, setStatus] = useState<"pending" | "loading" | "success" | "error">(
-    pending ? "pending" : "loading"
+    pending ? "pending" : token ? "loading" : "error"
   );
   const [message, setMessage] = useState(
-    pending ? "Please check your email for a verification link." : ""
+    pending
+      ? "Please check your email for a verification link."
+      : !token
+      ? "No verification token provided."
+      : ""
   );
 
   useEffect(() => {
-    if (pending || !token) {
-      if (!token && !pending) {
-        setStatus("error");
-        setMessage("No verification token provided.");
-      }
-      return;
-    }
+    if (pending || !token) return;
     fetch("/api/auth/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -38,26 +38,33 @@ export default function AnalyticsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    let from = dateFrom;
-    let to = dateTo;
-    if (preset !== "custom") {
-      const dates = getPresetDates(preset);
-      if (dates) {
-        from = dates.from.toISOString().slice(0, 10);
-        to = dates.to.toISOString().slice(0, 10);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      let from = dateFrom;
+      let to = dateTo;
+      if (preset !== "custom") {
+        const dates = getPresetDates(preset);
+        if (dates) {
+          from = dates.from.toISOString().slice(0, 10);
+          to = dates.to.toISOString().slice(0, 10);
+        }
+      }
+      const params = new URLSearchParams();
+      if (from) params.set("dateFrom", from);
+      if (to) params.set("dateTo", to);
+      const res = await fetch(`/api/analytics?${params}`);
+      if (!cancelled) {
+        if (res.ok) setData(await res.json());
+        setLoading(false);
       }
     }
-    const params = new URLSearchParams();
-    if (from) params.set("dateFrom", from);
-    if (to) params.set("dateTo", to);
-    const res = await fetch(`/api/analytics?${params}`);
-    if (res.ok) setData(await res.json());
-    setLoading(false);
-  }, [preset, dateFrom, dateTo]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+    load();
+    return () => { cancelled = true; };
+  }, [preset, dateFrom, dateTo]);
 
   return (
     <div className="space-y-6">

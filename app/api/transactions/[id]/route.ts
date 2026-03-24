@@ -27,8 +27,15 @@ export async function PUT(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
     }
 
-    const data: any = { ...parsed.data };
-    if (data.date) data.date = new Date(data.date);
+    const data: {
+      accountId?: string;
+      categoryId?: string;
+      type?: "income" | "expense";
+      amount?: number;
+      date?: string | Date;
+      description?: string;
+    } = { ...parsed.data };
+    if (data.date) data.date = new Date(data.date as string);
 
     if (data.accountId) {
       const account = await prisma.account.findFirst({ where: { id: data.accountId, userId: user.id } });
@@ -48,9 +55,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
       },
     });
     return NextResponse.json(transaction);
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -65,9 +73,10 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     await prisma.transaction.delete({ where: { id } });
     return NextResponse.json({ message: "Deleted" });
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

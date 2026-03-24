@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -35,28 +35,33 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    const firstDay = new Date(year, month, 1).toISOString().slice(0, 10);
-    const lastDay = new Date(year, month + 1, 0).toISOString().slice(0, 10);
-    const params = new URLSearchParams({ dateFrom: firstDay, dateTo: lastDay, limit: "500" });
-    const res = await fetch(`/api/transactions?${params}`);
-    if (res.ok) {
-      const data = await res.json();
-      const map: Record<string, DayData> = {};
-      for (const t of data.transactions) {
-        const key = t.date.slice(0, 10);
-        if (!map[key]) map[key] = { income: 0, expense: 0, transactions: [] };
-        if (t.type === "income") map[key].income += t.amount;
-        else map[key].expense += t.amount;
-        map[key].transactions.push(t);
-      }
-      setDayMap(map);
-    }
-    setLoading(false);
-  }, [year, month]);
+  useEffect(() => {
+    let cancelled = false;
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+    async function load() {
+      setLoading(true);
+      const firstDay = new Date(year, month, 1).toISOString().slice(0, 10);
+      const lastDay = new Date(year, month + 1, 0).toISOString().slice(0, 10);
+      const params = new URLSearchParams({ dateFrom: firstDay, dateTo: lastDay, limit: "500" });
+      const res = await fetch(`/api/transactions?${params}`);
+      if (!cancelled && res.ok) {
+        const data = await res.json();
+        const map: Record<string, DayData> = {};
+        for (const t of data.transactions) {
+          const key = t.date.slice(0, 10);
+          if (!map[key]) map[key] = { income: 0, expense: 0, transactions: [] };
+          if (t.type === "income") map[key].income += t.amount;
+          else map[key].expense += t.amount;
+          map[key].transactions.push(t);
+        }
+        setDayMap(map);
+      }
+      if (!cancelled) setLoading(false);
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [year, month]);
 
   function prevMonth() {
     if (month === 0) { setYear(y => y - 1); setMonth(11); }

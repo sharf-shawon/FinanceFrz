@@ -25,9 +25,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
     }
     const category = await prisma.category.update({ where: { id }, data: parsed.data });
     return NextResponse.json(category);
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -42,9 +43,10 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     await prisma.category.delete({ where: { id } });
     return NextResponse.json({ message: "Deleted" });
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

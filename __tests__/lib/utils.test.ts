@@ -22,7 +22,7 @@ describe("cn()", () => {
   });
 
   it("handles undefined / null gracefully", () => {
-    expect(cn(undefined, null as any, "ok")).toBe("ok");
+    expect(cn(undefined, null, "ok")).toBe("ok");
   });
 
   it("returns empty string for no args", () => {

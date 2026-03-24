@@ -11,7 +11,11 @@ export async function GET(req: NextRequest) {
     const dateTo = searchParams.get("dateTo");
     const accountId = searchParams.get("accountId");
 
-    const where: any = { userId: user.id };
+    const where: {
+      userId: string;
+      accountId?: string;
+      date?: { gte?: Date; lte?: Date };
+    } = { userId: user.id };
     if (accountId) where.accountId = accountId;
     if (dateFrom || dateTo) {
       where.date = {};
@@ -75,9 +79,10 @@ export async function GET(req: NextRequest) {
       categoryBreakdown,
       timeSeries,
     });
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

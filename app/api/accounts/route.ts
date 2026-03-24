@@ -9,7 +9,7 @@ const schema = z.object({
   currency: z.string().default("USD"),
 });
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const user = await requireVerifiedAuth();
     const accounts = await prisma.account.findMany({
@@ -17,9 +17,10 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(accounts);
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -37,9 +38,10 @@ export async function POST(req: NextRequest) {
       data: { ...parsed.data, userId: user.id },
     });
     return NextResponse.json(account, { status: 201 });
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -9,7 +9,7 @@ const schema = z.object({
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default("#6366f1"),
 });
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const user = await requireVerifiedAuth();
     const categories = await prisma.category.findMany({
@@ -17,9 +17,10 @@ export async function GET(req: NextRequest) {
       orderBy: { name: "asc" },
     });
     return NextResponse.json(categories);
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -37,9 +38,10 @@ export async function POST(req: NextRequest) {
       data: { ...parsed.data, userId: user.id },
     });
     return NextResponse.json(category, { status: 201 });
-  } catch (err: any) {
-    if (err.message === "Unauthorized" || err.message === "Email not verified") {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "Email not verified") {
+      return NextResponse.json({ error: message }, { status: 401 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

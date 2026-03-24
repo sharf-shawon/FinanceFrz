@@ -28,11 +28,18 @@ interface SidebarProps {
   locale: string;
 }
 
-export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
+interface NavContentProps {
+  user: { name?: string | null; email: string };
+  theme: string;
+  onThemeToggle: () => void;
+  locale: string;
+  onMobileClose: () => void;
+}
+
+function NavContent({ user, theme, onThemeToggle, locale, onMobileClose }: NavContentProps) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
@@ -49,7 +56,7 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
     router.refresh();
   }
 
-  const NavContent = () => (
+  return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
@@ -66,7 +73,7 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setMobileOpen(false)}
+              onClick={onMobileClose}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive
@@ -98,6 +105,10 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
       </div>
     </div>
   );
+}
+
+export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <>
@@ -127,12 +138,24 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <NavContent />
+        <NavContent
+          user={user}
+          theme={theme}
+          onThemeToggle={onThemeToggle}
+          locale={locale}
+          onMobileClose={() => setMobileOpen(false)}
+        />
       </aside>
 
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-        <NavContent />
+        <NavContent
+          user={user}
+          theme={theme}
+          onThemeToggle={onThemeToggle}
+          locale={locale}
+          onMobileClose={() => setMobileOpen(false)}
+        />
       </aside>
     </>
   );
