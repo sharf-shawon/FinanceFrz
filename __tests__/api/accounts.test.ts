@@ -54,15 +54,39 @@ describe("GET /api/accounts", () => {
     expect(await res.json()).toEqual([]);
   });
 
-  it("returns accounts for the authenticated user", async () => {
+  it("returns accounts with computed balance field", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
     const accounts = [
-      { id: "a1", name: "Checking", type: "bank", currency: "USD", userId: user.id },
+      {
+        id: "a1",
+        name: "Checking",
+        type: "bank",
+        currency: "BDT",
+        userId: user.id,
+        transactions: [
+          { type: "income", amount: 1000 },
+          { type: "expense", amount: 200 },
+        ],
+      },
     ];
     mockFindMany.mockResolvedValue(accounts);
     const res = await GET(makeReq("/api/accounts", "GET"));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual(accounts);
+    const json = await res.json();
+    expect(json).toHaveLength(1);
+    expect(json[0].balance).toBe(800);
+    // transactions array should not be in response
+    expect(json[0]).not.toHaveProperty("transactions");
+  });
+
+  it("computes zero balance for account with no transactions", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockResolvedValue([
+      { id: "a2", name: "Empty", type: "cash", currency: "BDT", userId: user.id, transactions: [] },
+    ]);
+    const res = await GET(makeReq("/api/accounts", "GET"));
+    const json = await res.json();
+    expect(json[0].balance).toBe(0);
   });
 
   it("queries with the correct userId filter", async () => {
@@ -108,15 +132,17 @@ describe("POST /api/accounts", () => {
     expect(res.status).toBe(400);
   });
 
-  it("creates account and returns 201", async () => {
+  it("creates account and returns 201 with balance: 0", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
-    const created = { id: "a2", name: "Savings", type: "savings", currency: "USD", userId: user.id };
+    const created = { id: "a2", name: "Savings", type: "savings", currency: "BDT", userId: user.id };
     mockCreate.mockResolvedValue(created);
     const res = await POST(
       makeReq("/api/accounts", "POST", { name: "Savings", type: "savings" })
     );
     expect(res.status).toBe(201);
-    expect(await res.json()).toEqual(created);
+    const json = await res.json();
+    expect(json.id).toBe("a2");
+    expect(json.balance).toBe(0);
   });
 
   it("passes userId from auth to prisma.create", async () => {
@@ -128,12 +154,12 @@ describe("POST /api/accounts", () => {
     );
   });
 
-  it("uses default currency USD when not provided", async () => {
+  it("uses default currency BDT when not provided", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
-    mockCreate.mockResolvedValue({ id: "a4", currency: "USD" });
+    mockCreate.mockResolvedValue({ id: "a4", currency: "BDT" });
     await POST(makeReq("/api/accounts", "POST", { name: "N", type: "cash" }));
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ currency: "USD" }) })
+      expect.objectContaining({ data: expect.objectContaining({ currency: "BDT" }) })
     );
   });
 

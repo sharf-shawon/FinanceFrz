@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Tags } from "lucide-react";
-import { CATEGORY_COLORS } from "@/lib/utils";
+import { Plus, Pencil, Trash2, Tags, Shuffle } from "lucide-react";
+import { CATEGORY_COLORS, getRandomCategoryColor } from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -20,6 +21,9 @@ interface Category {
 }
 
 export default function CategoriesPage() {
+  const t = useTranslations("categories");
+  const tc = useTranslations("common");
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -38,7 +42,7 @@ export default function CategoriesPage() {
 
   function openCreate() {
     setEditCategory(null);
-    setForm({ name: "", type: "expense", color: CATEGORY_COLORS[0] });
+    setForm({ name: "", type: "expense", color: getRandomCategoryColor() });
     setError("");
     setOpen(true);
   }
@@ -72,7 +76,7 @@ export default function CategoriesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this category? All transactions linked to it will also be permanently deleted (cascade). This cannot be undone.")) return;
+    if (!confirm(t("deleteConfirm"))) return;
     await fetch(`/api/categories/${id}`, { method: "DELETE" });
     fetchCategories();
   }
@@ -81,31 +85,31 @@ export default function CategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Categories</h1>
-          <p className="text-muted-foreground">Organize your income and expenses</p>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" /> Add Category
+          <Plus className="h-4 w-4" /> {t("addCategory")}
         </Button>
       </div>
 
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="py-12 text-center text-muted-foreground">Loading...</div>
+            <div className="py-12 text-center text-muted-foreground">{tc("loading")}</div>
           ) : categories.length === 0 ? (
             <div className="py-12 text-center">
               <Tags className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No categories yet. Add your first category.</p>
+              <p className="text-muted-foreground">{t("noCategories")}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Color</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("name")}</TableHead>
+                  <TableHead>{t("type")}</TableHead>
+                  <TableHead>{t("color")}</TableHead>
+                  <TableHead className="text-right">{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -119,17 +123,17 @@ export default function CategoriesPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={cat.type === "income" ? "default" : "secondary"}>
-                        {cat.type}
+                        {cat.type === "income" ? t("income") : t("expense")}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <code className="text-xs text-muted-foreground">{cat.color}</code>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} aria-label="Edit">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} aria-label={tc("edit")}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(cat.id)} aria-label="Delete"
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(cat.id)} aria-label={tc("delete")}
                         className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -145,27 +149,39 @@ export default function CategoriesPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editCategory ? "Edit Category" : "Add Category"}</DialogTitle>
+            <DialogTitle>{editCategory ? t("editCategory") : t("addCategory")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave}>
             <div className="space-y-4 py-2">
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="space-y-2">
-                <Label htmlFor="cat-name">Name</Label>
+                <Label htmlFor="cat-name">{t("name")}</Label>
                 <Input id="cat-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               </div>
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>{t("type")}</Label>
                 <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as "income" | "expense" })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
+                    <SelectItem value="income">{t("income")}</SelectItem>
+                    <SelectItem value="expense">{t("expense")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Color</Label>
+                <div className="flex items-center justify-between">
+                  <Label>{t("color")}</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs h-7"
+                    onClick={() => setForm({ ...form, color: getRandomCategoryColor() })}
+                  >
+                    <Shuffle className="h-3 w-3" />
+                    {t("randomColor")}
+                  </Button>
+                </div>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {CATEGORY_COLORS.map((color) => (
                     <button
@@ -198,8 +214,8 @@ export default function CategoriesPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{tc("cancel")}</Button>
+              <Button type="submit" disabled={saving}>{saving ? tc("saving") : tc("save")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

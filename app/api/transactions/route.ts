@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const schema = z.object({
   accountId: z.string(),
-  categoryId: z.string(),
+  categoryId: z.string().nullable().optional(),
   type: z.enum(["income", "expense"]),
   amount: z.number().positive(),
   date: z.string(),
@@ -78,19 +78,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
     }
 
-    // Verify account and category belong to user
-    const [account, category] = await Promise.all([
-      prisma.account.findFirst({ where: { id: parsed.data.accountId, userId: user.id } }),
-      prisma.category.findFirst({ where: { id: parsed.data.categoryId, userId: user.id } }),
-    ]);
+    // Verify account belongs to user
+    const account = await prisma.account.findFirst({ where: { id: parsed.data.accountId, userId: user.id } });
     if (!account) return NextResponse.json({ error: "Account not found" }, { status: 400 });
-    if (!category) return NextResponse.json({ error: "Category not found" }, { status: 400 });
+
+    // Verify category belongs to user (only when provided)
+    if (parsed.data.categoryId) {
+      const category = await prisma.category.findFirst({ where: { id: parsed.data.categoryId, userId: user.id } });
+      if (!category) return NextResponse.json({ error: "Category not found" }, { status: 400 });
+    }
 
     const transaction = await prisma.transaction.create({
       data: {
-        ...parsed.data,
-        userId: user.id,
+        accountId: parsed.data.accountId,
+        categoryId: parsed.data.categoryId ?? null,
+        type: parsed.data.type,
+        amount: parsed.data.amount,
         date: new Date(parsed.data.date),
+        description: parsed.data.description,
+        userId: user.id,
       },
       include: {
         account: { select: { id: true, name: true, currency: true } },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,9 @@ function getPresetDates(preset: string) {
 }
 
 export default function AnalyticsPage() {
+  const t = useTranslations("analytics");
+  const tc = useTranslations("common");
+
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [preset, setPreset] = useState("this_month");
@@ -69,8 +73,8 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">Understand your financial patterns</p>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       {/* Date Range Selector */}
@@ -78,26 +82,26 @@ export default function AnalyticsPage() {
         <CardContent className="pt-4">
           <div className="flex flex-wrap gap-3 items-end">
             <div className="space-y-1.5">
-              <Label>Period</Label>
+              <Label>{t("period")}</Label>
               <Select value={preset} onValueChange={setPreset}>
                 <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="this_month">This Month</SelectItem>
-                  <SelectItem value="last_month">Last Month</SelectItem>
-                  <SelectItem value="last_3_months">Last 3 Months</SelectItem>
-                  <SelectItem value="ytd">Year to Date</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
+                  <SelectItem value="this_month">{t("thisMonth")}</SelectItem>
+                  <SelectItem value="last_month">{t("lastMonth")}</SelectItem>
+                  <SelectItem value="last_3_months">{t("last3Months")}</SelectItem>
+                  <SelectItem value="ytd">{t("ytd")}</SelectItem>
+                  <SelectItem value="custom">{t("custom")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {preset === "custom" && (
               <>
                 <div className="space-y-1.5">
-                  <Label>From</Label>
+                  <Label>{t("from")}</Label>
                   <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>To</Label>
+                  <Label>{t("to")}</Label>
                   <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
                 </div>
               </>
@@ -107,16 +111,16 @@ export default function AnalyticsPage() {
       </Card>
 
       {loading ? (
-        <div className="py-12 text-center text-muted-foreground">Loading analytics...</div>
+        <div className="py-12 text-center text-muted-foreground">{tc("loadingAnalytics")}</div>
       ) : !data ? (
-        <div className="py-12 text-center text-muted-foreground">No data available</div>
+        <div className="py-12 text-center text-muted-foreground">{tc("noData")}</div>
       ) : (
         <>
           {/* Summary Cards */}
           <div className="grid gap-4 sm:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("totalIncome")}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
@@ -125,7 +129,7 @@ export default function AnalyticsPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("totalExpenses")}</CardTitle>
                 <TrendingDown className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
@@ -134,7 +138,7 @@ export default function AnalyticsPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Net</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("netBalance")}</CardTitle>
                 <DollarSign className={`h-4 w-4 ${data.summary.net >= 0 ? "text-green-500" : "text-red-500"}`} />
               </CardHeader>
               <CardContent>
@@ -149,11 +153,11 @@ export default function AnalyticsPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Income vs Expenses Over Time</CardTitle>
+                <CardTitle className="text-base">{t("incomeVsExpense")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {data.timeSeries.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No data for this period</p>
+                  <p className="text-center text-muted-foreground py-8">{t("noData")}</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={data.timeSeries} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -172,11 +176,11 @@ export default function AnalyticsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Expense Breakdown by Category</CardTitle>
+                <CardTitle className="text-base">{t("expenseBreakdown")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {data.categoryBreakdown.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No expense data for this period</p>
+                  <p className="text-center text-muted-foreground py-8">{t("noExpenseData")}</p>
                 ) : (
                   <div className="flex flex-col items-center gap-4">
                     <ResponsiveContainer width="100%" height={200}>
