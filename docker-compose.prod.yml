@@ -6,9 +6,14 @@ services:
       target: runner
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-noreply@financefrz.com}
+    volumes:
+      - app_data:/app/data
     restart: unless-stopped
+
+volumes:
+  app_data:
