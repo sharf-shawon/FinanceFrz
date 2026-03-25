@@ -12,7 +12,9 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
     fetch(event.request).catch(() => {
-      return caches.match(event.request);
+      return caches.match(event.request).then((cached) => {
+        return cached || Response.error();
+      });
     })
   );
 });
