@@ -13,25 +13,12 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-interface Account {
-  id: string;
-  name: string;
-  currency: string;
-}
-
 interface Suggestion {
   description: string;
   type: string;
@@ -200,8 +187,6 @@ export default function DailyLogsPage() {
   const tc = useTranslations("common");
 
   const [currentDate, setCurrentDate] = useState<string>(() => toLocalDate(new Date()));
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [accountId, setAccountId] = useState<string>("");
   const [previousBalance, setPreviousBalance] = useState<number>(0);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
@@ -217,7 +202,7 @@ export default function DailyLogsPage() {
   const [navGuardOpen, setNavGuardOpen] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
-  const currency = accounts.find((a) => a.id === accountId)?.currency ?? "BDT";
+  const currency = "BDT";
 
   // ---------------------------------------------------------------------------
   // Derived totals (all computed in real-time)
@@ -227,11 +212,10 @@ export default function DailyLogsPage() {
   const netBalance = previousBalance + totalIncome - totalExpense;
 
   // ---------------------------------------------------------------------------
-  // Load data for the selected date + account
+  // Load data for the selected date
   // ---------------------------------------------------------------------------
   const loadData = useCallback(
-    async (date: string, accId: string) => {
-      if (!accId) return;
+    async (date: string) => {
       setLoading(true);
       setSaveError("");
       try {
@@ -241,10 +225,7 @@ export default function DailyLogsPage() {
         setPreviousBalance(data.previousBalance ?? 0);
         setSuggestions(data.suggestions ?? []);
 
-        // Split existing transactions by account + type
-        const dayTxns: DailyTransaction[] = (data.transactions ?? []).filter(
-          (tx: DailyTransaction) => tx.account.id === accId
-        );
+        const dayTxns: DailyTransaction[] = data.transactions ?? [];
 
         const inc = dayTxns.filter((t) => t.type === "income").map(txnToRow);
         const exp = dayTxns.filter((t) => t.type === "expense").map(txnToRow);
@@ -259,31 +240,21 @@ export default function DailyLogsPage() {
     []
   );
 
-  // Initial load: fetch accounts first, then load the day
+  // Initial load
   useEffect(() => {
     async function bootstrap() {
-      const accRes = await fetch("/api/accounts");
-      const accs: Account[] = accRes.ok ? await accRes.json() : [];
-      setAccounts(accs);
-
-      const defaultAcc = accs[0]?.id ?? "";
-      setAccountId(defaultAcc);
-      if (defaultAcc) {
-        await loadData(currentDate, defaultAcc);
-      } else {
-        setLoading(false);
-      }
+      await loadData(currentDate);
     }
     bootstrap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reload when date or account changes (but not on first mount — handled above)
+  // Reload when date changes (but not on first mount — handled above)
   const isFirstMount = useRef(true);
   useEffect(() => {
     if (isFirstMount.current) { isFirstMount.current = false; return; }
-    loadData(currentDate, accountId);
-  }, [currentDate, accountId, loadData]);
+    loadData(currentDate);
+  }, [currentDate, loadData]);
 
   // ---------------------------------------------------------------------------
   // beforeunload guard
@@ -407,7 +378,6 @@ export default function DailyLogsPage() {
     try {
       const payload = {
         date: currentDate,
-        accountId,
         rows: [
           ...rowsToPayload(incomeRows, "income"),
           ...rowsToPayload(expenseRows, "expense"),
@@ -430,7 +400,7 @@ export default function DailyLogsPage() {
   }
 
   function handleDiscard() {
-    loadData(currentDate, accountId);
+    loadData(currentDate);
   }
 
   // ---------------------------------------------------------------------------
@@ -571,46 +541,27 @@ export default function DailyLogsPage() {
         </p>
       )}
 
-      {/* Date navigation + account selector */}
+      {/* Date navigation */}
       <Card>
         <CardContent className="pt-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Date navigation */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigateDate(-1)}
-                aria-label={t("previousDay")}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="min-w-[220px] text-center font-medium">{displayDate}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigateDate(1)}
-                aria-label={t("nextDay")}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Account selector */}
-            {accounts.length > 0 && (
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger className="w-48" aria-label={t("account")}>
-                  <SelectValue placeholder={t("selectAccount")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigateDate(-1)}
+              aria-label={t("previousDay")}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-[220px] text-center font-medium">{displayDate}</span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigateDate(1)}
+              aria-label={t("nextDay")}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Previous balance */}
@@ -747,7 +698,7 @@ export default function DailyLogsPage() {
                     {t("discard")}
                   </Button>
                 )}
-                <Button onClick={handleSave} disabled={saving || !accountId}>
+                <Button onClick={handleSave} disabled={saving}>
                   {saving ? tc("saving") : tc("save")}
                 </Button>
               </div>

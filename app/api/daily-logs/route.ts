@@ -3,9 +3,34 @@ import { requireVerifiedAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+const DAILY_LOGS_ACCOUNT_NAME = "Daily Logs";
+
+async function getOrCreateDailyLogsAccount(userId: string) {
+  const existing = await prisma.account.findFirst({
+    where: {
+      userId,
+      name: DAILY_LOGS_ACCOUNT_NAME,
+      type: "other",
+    },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.account.create({
+    data: {
+      userId,
+      name: DAILY_LOGS_ACCOUNT_NAME,
+      type: "other",
+      currency: "BDT",
+    },
+  });
+}
+
 const rowSchema = z.object({
   type: z.enum(["income", "expense"]),
-  description: z.string().min(1),
+  description: z.string().trim().min(1, "Description is required"),
   quantity: z.number().positive(),
   rate: z.number().positive(),
   categoryId: z.string().nullable().optional(),
@@ -13,7 +38,7 @@ const rowSchema = z.object({
 
 const saveSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  accountId: z.string().min(1),
+  accountId: z.string().min(1).optional(),
   rows: z.array(rowSchema),
 });
 
@@ -29,14 +54,16 @@ export async function GET(req: NextRequest) {
 
     const dayStart = new Date(`${date}T00:00:00.000Z`);
     const dayEnd = new Date(`${date}T23:59:59.999Z`);
+    const dailyLogsAccount = await getOrCreateDailyLogsAccount(user.id);
 
     // Fetch all data in parallel
-    const [transactions, accounts, categories, prevTransactions, recentRaw] =
+    const [transactions, categories, prevTransactions, recentRaw] =
       await Promise.all([
         // Transactions for the selected day
         prisma.transaction.findMany({
           where: {
             userId: user.id,
+            accountId: dailyLogsAccount.id,
             date: { gte: dayStart, lte: dayEnd },
           },
           include: {
@@ -44,12 +71,6 @@ export async function GET(req: NextRequest) {
             category: { select: { id: true, name: true, color: true, type: true } },
           },
           orderBy: { createdAt: "asc" },
-        }),
-
-        // Accounts for the account selector
-        prisma.account.findMany({
-          where: { userId: user.id },
-          orderBy: { name: "asc" },
         }),
 
         // Categories for optional row categorisation
@@ -62,6 +83,7 @@ export async function GET(req: NextRequest) {
         prisma.transaction.findMany({
           where: {
             userId: user.id,
+            accountId: dailyLogsAccount.id,
             date: { lt: dayStart },
           },
           select: { type: true, amount: true },
@@ -71,6 +93,7 @@ export async function GET(req: NextRequest) {
         prisma.transaction.findMany({
           where: {
             userId: user.id,
+            accountId: dailyLogsAccount.id,
             description: { not: null },
           },
           select: {
@@ -115,7 +138,6 @@ export async function GET(req: NextRequest) {
       transactions,
       previousBalance,
       suggestions,
-      accounts,
       categories,
     });
   } catch (err: unknown) {
@@ -133,21 +155,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = saveSchema.safeParse(body);
     if (!parsed.success) {
+      const firstIssue = parsed.error.issues[0];
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid request" },
+        { error: firstIssue?.message ?? "Invalid request" },
         { status: 400 }
       );
     }
 
-    const { date, accountId, rows } = parsed.data;
-
-    // Verify account belongs to user
-    const account = await prisma.account.findFirst({
-      where: { id: accountId, userId: user.id },
-    });
-    if (!account) {
-      return NextResponse.json({ error: "Account not found" }, { status: 400 });
-    }
+    const { date, rows } = parsed.data;
+    const dailyLogsAccount = await getOrCreateDailyLogsAccount(user.id);
 
     // Verify any provided category IDs belong to user
     const categoryIds = [...new Set(rows.map((r) => r.categoryId).filter(Boolean) as string[])];
@@ -169,14 +185,14 @@ export async function POST(req: NextRequest) {
       prisma.transaction.deleteMany({
         where: {
           userId: user.id,
-          accountId,
+          accountId: dailyLogsAccount.id,
           date: { gte: dayStart, lte: dayEnd },
         },
       }),
       prisma.transaction.createMany({
         data: rows.map((r) => ({
           userId: user.id,
-          accountId,
+          accountId: dailyLogsAccount.id,
           categoryId: r.categoryId ?? null,
           type: r.type,
           description: r.description,

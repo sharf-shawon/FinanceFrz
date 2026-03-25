@@ -1,6 +1,10 @@
 services:
   app:
-    image: ghcr.io/sharf-shawon/financefrz:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    # image: ghcr.io/sharf-shawon/financefrz:latest
     pull_policy: always
     environment:
       - NODE_ENV=production

@@ -3,8 +3,11 @@
   "version": "0.1.1",
   "private": true,
   "scripts": {
+    "predev": "prisma migrate deploy && prisma generate",
     "dev": "next dev",
+    "prebuild": "prisma generate",
     "build": "next build",
+    "prestart": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

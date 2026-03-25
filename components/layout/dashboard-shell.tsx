@@ -10,10 +10,14 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ children, user, locale }: DashboardShellProps) {
-  const [theme, setTheme] = useState<string>(() => {
-    if (typeof window === "undefined") return "light";
-    return localStorage.getItem("theme") ?? "light";
-  });
+  const [theme, setTheme] = useState<string>("light");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark" || stored === "light") {
+      setTheme(stored);
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
