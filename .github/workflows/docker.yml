@@ -54,8 +54,12 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Notify Coolify
-        if: ${{ success() && secrets.COOLIFY_WEBHOOK_URL != '' }}
+        if: ${{ success() && env.COOLIFY_WEBHOOK_URL != '' }}
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
           curl -fsSL \
             -X GET \
-            "${{ secrets.COOLIFY_WEBHOOK_URL }}"
+            -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            "${COOLIFY_WEBHOOK_URL}"
