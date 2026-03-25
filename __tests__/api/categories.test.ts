@@ -66,6 +66,13 @@ describe("GET /api/categories", () => {
     const res = await GET(makeReq("/api/categories", "GET"));
     expect(res.status).toBe(500);
   });
+
+  it("returns 500 when a non-Error is thrown in GET", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockRejectedValue("plain error");
+    const res = await GET(makeReq("/api/categories", "GET"));
+    expect(res.status).toBe(500);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -136,6 +143,13 @@ describe("POST /api/categories", () => {
     const res = await POST(
       makeReq("/api/categories", "POST", { name: "X", type: "expense" })
     );
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 500 when a non-Error is thrown in POST", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockCreate.mockRejectedValue("string error");
+    const res = await POST(makeReq("/api/categories", "POST", { name: "X", type: "expense" }));
     expect(res.status).toBe(500);
   });
 });

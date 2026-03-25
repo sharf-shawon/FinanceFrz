@@ -44,11 +44,11 @@ function NavContent({ user, theme, onThemeToggle, locale, onMobileClose, showLog
 
   const navItems = [
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
-    { href: "/accounts", label: t("accounts"), icon: CreditCard },
-    { href: "/categories", label: t("categories"), icon: Tags },
     { href: "/transactions", label: t("transactions"), icon: ArrowLeftRight },
     { href: "/analytics", label: t("analytics"), icon: BarChart3 },
     { href: "/calendar", label: t("calendar"), icon: Calendar },
+    { href: "/accounts", label: t("accounts"), icon: CreditCard },
+    { href: "/categories", label: t("categories"), icon: Tags },
   ];
 
   async function handleLogout() {

@@ -38,7 +38,11 @@
     "recentTransactions": "Recent Transactions",
     "noTransactions": "No transactions yet",
     "viewAll": "View all",
-    "quickLinks": "Quick Links"
+    "quickLinks": "Quick Links",
+    "monthlyTrend": "Monthly Income vs Expenses",
+    "spendingByCategory": "Spending by Category",
+    "noChartData": "No data yet for charts",
+    "last6months": "Last 6 Months"
   },
   "accounts": {
     "title": "Accounts",
@@ -129,7 +133,11 @@
     "last30days": "Last 30 days",
     "last3months": "Last 3 months",
     "last6months": "Last 6 months",
-    "lastYear": "Last year"
+    "lastYear": "Last year",
+    "incomeBreakdown": "Income Breakdown by Category",
+    "noIncomeData": "No income data for this period",
+    "topExpenses": "Top Expenses",
+    "monthlyTrend": "Monthly Trend"
   },
   "calendar": {
     "title": "Calendar",
