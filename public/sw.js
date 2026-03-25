@@ -1,4 +1,4 @@
-const CACHE_NAME = "financefz-v1";
+const _CACHE_NAME = "financefz-v1";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
