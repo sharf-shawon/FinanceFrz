@@ -75,7 +75,7 @@ describe("proxy middleware", () => {
   });
 
   it("allows unauthenticated access to /icons/ (PWA icons)", () => {
-    const req = makeRequest("/icons/icon-192x192.png");
+    const req = makeRequest("/icons/android-icon-192x192.png");
     const res = proxy(req);
     expect(res.status).toBe(200);
   });
