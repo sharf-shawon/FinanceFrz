@@ -144,6 +144,16 @@ describe("PUT /api/transactions/[id]", () => {
     );
     expect(res.status).toBe(500);
   });
+
+  it("returns 500 when a non-Error is thrown in PUT", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockTxFindFirst.mockRejectedValue("string error");
+    const res = await PUT(
+      makeReq("/api/transactions/t1", "PUT", { amount: 10 }),
+      makeParams("t1")
+    );
+    expect(res.status).toBe(500);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -176,6 +186,13 @@ describe("DELETE /api/transactions/[id]", () => {
   it("returns 500 on unexpected error", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
     mockTxFindFirst.mockRejectedValue(new Error("crash"));
+    const res = await DELETE(makeReq("/api/transactions/t1", "DELETE"), makeParams("t1"));
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 500 when a non-Error is thrown in DELETE", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockTxFindFirst.mockRejectedValue("string error");
     const res = await DELETE(makeReq("/api/transactions/t1", "DELETE"), makeParams("t1"));
     expect(res.status).toBe(500);
   });

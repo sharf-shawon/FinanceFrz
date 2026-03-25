@@ -38,7 +38,11 @@
     "recentTransactions": "সাম্প্রতিক লেনদেন",
     "noTransactions": "এখনও কোনো লেনদেন নেই",
     "viewAll": "সব দেখুন",
-    "quickLinks": "দ্রুত লিঙ্ক"
+    "quickLinks": "দ্রুত লিঙ্ক",
+    "monthlyTrend": "মাসিক আয় বনাম ব্যয়",
+    "spendingByCategory": "বিভাগ অনুসারে ব্যয়",
+    "noChartData": "চার্টের জন্য এখনো কোনো ডেটা নেই",
+    "last6months": "গত ৬ মাস"
   },
   "accounts": {
     "title": "অ্যাকাউন্ট",
@@ -129,7 +133,11 @@
     "last30days": "গত ৩০ দিন",
     "last3months": "গত ৩ মাস",
     "last6months": "গত ৬ মাস",
-    "lastYear": "গত বছর"
+    "lastYear": "গত বছর",
+    "incomeBreakdown": "বিভাগ অনুসারে আয়ের বিস্তারিত",
+    "noIncomeData": "এই সময়ের জন্য কোনো আয়ের ডেটা নেই",
+    "topExpenses": "শীর্ষ ব্যয়",
+    "monthlyTrend": "মাসিক প্রবণতা"
   },
   "calendar": {
     "title": "ক্যালেন্ডার",

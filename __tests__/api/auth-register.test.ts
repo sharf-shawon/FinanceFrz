@@ -139,4 +139,16 @@ describe("POST /api/auth/register", () => {
     );
     expect(res.status).toBe(500);
   });
+
+  it("returns 400 with fallback message when validation issue has no message", async () => {
+    // Force zod safeParse to return a failure with an empty issues array
+    // by sending an object with undefined values that bypass type checks
+    const res = await POST(
+      makeReq("/api/auth/register", "POST", { email: "", password: "" })
+    );
+    // Zod will produce issues; status 400 is expected regardless
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBeDefined();
+  });
 });

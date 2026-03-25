@@ -2,7 +2,6 @@ name: Docker Build & Push
 
 on:
   push:
-    branches: [main]
     tags: ["v*"]
 
 env:
@@ -33,15 +32,17 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest
             type=sha,prefix=sha-
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
+        id: push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -51,3 +52,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Notify Coolify
+        if: ${{ success() && secrets.COOLIFY_WEBHOOK_URL != '' }}
+        run: |
+          curl -fsSL \
+            -X GET \
+            "${{ secrets.COOLIFY_WEBHOOK_URL }}"

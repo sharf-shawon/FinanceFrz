@@ -124,6 +124,47 @@ describe("GET /api/transactions", () => {
     const res = await GET(makeReq("/api/transactions", "GET"));
     expect(res.status).toBe(500);
   });
+
+  it("returns 500 when a non-Error is thrown in GET", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockRejectedValue("plain error");
+    const res = await GET(makeReq("/api/transactions", "GET"));
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 401 when email not verified in GET", async () => {
+    mockUnauthed(mockRequireVerifiedAuth, "Email not verified");
+    const res = await GET(makeReq("/api/transactions", "GET"));
+    expect(res.status).toBe(401);
+  });
+
+  it("filters with only dateFrom (no dateTo) in GET", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockResolvedValue([]);
+    mockCount.mockResolvedValue(0);
+    await GET(makeReq("/api/transactions", "GET", undefined, { dateFrom: "2024-01-01" }));
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          date: expect.objectContaining({ gte: expect.any(Date) }),
+        }),
+      })
+    );
+  });
+
+  it("filters with only dateTo (no dateFrom) in GET", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockResolvedValue([]);
+    mockCount.mockResolvedValue(0);
+    await GET(makeReq("/api/transactions", "GET", undefined, { dateTo: "2024-12-31" }));
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          date: expect.objectContaining({ lte: expect.any(Date) }),
+        }),
+      })
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -260,6 +301,13 @@ describe("POST /api/transactions", () => {
   it("returns 500 on unexpected errors", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
     mockFindFirst.mockRejectedValue(new Error("crash"));
+    const res = await POST(makeReq("/api/transactions", "POST", validBody));
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 500 when a non-Error is thrown in POST", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindFirst.mockRejectedValue("plain error");
     const res = await POST(makeReq("/api/transactions", "POST", validBody));
     expect(res.status).toBe(500);
   });

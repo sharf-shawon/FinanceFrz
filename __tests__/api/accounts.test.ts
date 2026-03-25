@@ -104,6 +104,13 @@ describe("GET /api/accounts", () => {
     const res = await GET(makeReq("/api/accounts", "GET"));
     expect(res.status).toBe(500);
   });
+
+  it("returns 500 when a non-Error is thrown in GET", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockRejectedValue("plain string");
+    const res = await GET(makeReq("/api/accounts", "GET"));
+    expect(res.status).toBe(500);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -169,6 +176,13 @@ describe("POST /api/accounts", () => {
     const res = await POST(
       makeReq("/api/accounts", "POST", { name: "X", type: "cash" })
     );
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 500 when a non-Error is thrown in POST", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockCreate.mockRejectedValue("string error");
+    const res = await POST(makeReq("/api/accounts", "POST", { name: "Y", type: "cash" }));
     expect(res.status).toBe(500);
   });
 });

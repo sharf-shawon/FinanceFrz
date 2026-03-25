@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       .reduce((sum: number, t) => sum + t.amount, 0);
     const net = totalIncome - totalExpense;
 
-    // Category breakdown
+    // Category breakdown (expenses)
     const categoryMap = new Map<string, { name: string; color: string; total: number }>();
     for (const t of transactions) {
       if (t.type === "expense" && t.categoryId && t.category) {
@@ -61,6 +61,41 @@ export async function GET(req: NextRequest) {
       .map(([id, data]) => ({ id, ...data }))
       .sort((a, b) => b.total - a.total);
 
+    // Income breakdown by category
+    const incomeCategoryMap = new Map<string, { name: string; color: string; total: number }>();
+    for (const t of transactions) {
+      if (t.type === "income" && t.categoryId && t.category) {
+        const existing = incomeCategoryMap.get(t.categoryId);
+        if (existing) {
+          existing.total += t.amount;
+        } else {
+          incomeCategoryMap.set(t.categoryId, {
+            name: t.category.name,
+            color: t.category.color,
+            total: t.amount,
+          });
+        }
+      }
+    }
+    const incomeBreakdown = Array.from(incomeCategoryMap.entries())
+      .map(([id, data]) => ({ id, ...data }))
+      .sort((a, b) => b.total - a.total);
+
+    // Top expenses
+    const topExpenses = transactions
+      .filter((t) => t.type === "expense")
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5)
+      .map((t) => ({
+        id: t.id,
+        amount: t.amount,
+        date: t.date.toISOString().slice(0, 10),
+        description: t.description ?? null,
+        categoryName: t.category?.name ?? null,
+        categoryColor: t.category?.color ?? null,
+        accountName: t.account.name,
+      }));
+
     // Time series - group by date
     const dateMap = new Map<string, { income: number; expense: number }>();
     for (const t of transactions) {
@@ -77,6 +112,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       summary: { totalIncome, totalExpense, net },
       categoryBreakdown,
+      incomeBreakdown,
+      topExpenses,
       timeSeries,
     });
   } catch (err: unknown) {

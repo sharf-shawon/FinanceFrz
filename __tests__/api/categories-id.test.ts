@@ -80,6 +80,13 @@ describe("PUT /api/categories/[id]", () => {
     const res = await PUT(makeReq("/api/categories/c1", "PUT", {}), makeParams("c1"));
     expect(res.status).toBe(500);
   });
+
+  it("returns 500 when a non-Error is thrown in PUT", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindFirst.mockRejectedValue("string error");
+    const res = await PUT(makeReq("/api/categories/c1", "PUT", {}), makeParams("c1"));
+    expect(res.status).toBe(500);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -112,6 +119,13 @@ describe("DELETE /api/categories/[id]", () => {
   it("returns 500 on unexpected error", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
     mockFindFirst.mockRejectedValue(new Error("crash"));
+    const res = await DELETE(makeReq("/api/categories/c1", "DELETE"), makeParams("c1"));
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 500 when a non-Error is thrown in DELETE", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindFirst.mockRejectedValue("string error");
     const res = await DELETE(makeReq("/api/categories/c1", "DELETE"), makeParams("c1"));
     expect(res.status).toBe(500);
   });

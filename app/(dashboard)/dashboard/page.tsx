@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { DashboardCharts } from "@/components/dashboard/charts";
 
 export default async function DashboardPage() {
   const user = await requireVerifiedAuth();
@@ -145,6 +146,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <DashboardCharts />
     </div>
   );
 }

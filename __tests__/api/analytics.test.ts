@@ -165,4 +165,152 @@ describe("GET /api/analytics", () => {
     const res = await GET(makeReq("/api/analytics", "GET"));
     expect(res.status).toBe(500);
   });
+
+  it("returns 401 when email not verified", async () => {
+    mockUnauthed(mockRequireVerifiedAuth, "Email not verified");
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toBe("Email not verified");
+  });
+
+  it("returns 500 when a non-Error is thrown", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockRejectedValue("plain string error");
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    expect(res.status).toBe(500);
+  });
+
+  it("filters with only dateFrom (no dateTo)", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockResolvedValue([]);
+    await GET(makeReq("/api/analytics", "GET", undefined, { dateFrom: "2024-01-01" }));
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          date: expect.objectContaining({ gte: expect.any(Date) }),
+        }),
+      })
+    );
+  });
+
+  it("filters with only dateTo (no dateFrom)", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockResolvedValue([]);
+    await GET(makeReq("/api/analytics", "GET", undefined, { dateTo: "2024-12-31" }));
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          date: expect.objectContaining({ lte: expect.any(Date) }),
+        }),
+      })
+    );
+  });
+
+  it("returns incomeBreakdown grouped by income category", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockResolvedValue([
+      makeTxn("income", 500, "2024-01-01", "cat-salary", "Salary", "#22c55e"),
+      makeTxn("income", 200, "2024-01-05", "cat-salary", "Salary", "#22c55e"),
+      makeTxn("income", 300, "2024-01-10", "cat-freelance", "Freelance", "#6366f1"),
+    ]);
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    const { incomeBreakdown } = await res.json();
+    expect(incomeBreakdown).toHaveLength(2);
+    expect(incomeBreakdown[0].id).toBe("cat-salary");
+    expect(incomeBreakdown[0].total).toBe(700);
+  });
+
+  it("returns topExpenses sorted by amount descending", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockResolvedValue([
+      makeTxn("expense", 50, "2024-01-01"),
+      makeTxn("expense", 200, "2024-01-02"),
+      makeTxn("expense", 100, "2024-01-03"),
+    ]);
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    const { topExpenses } = await res.json();
+    expect(topExpenses[0].amount).toBe(200);
+    expect(topExpenses[1].amount).toBe(100);
+    expect(topExpenses[2].amount).toBe(50);
+  });
+
+  it("topExpenses includes description, categoryName and accountName", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    const txn = {
+      id: "t-special",
+      type: "expense" as const,
+      amount: 999,
+      date: new Date("2024-03-01"),
+      categoryId: "cat1",
+      category: { id: "cat1", name: "Food", color: "#ef4444" },
+      account: { id: "acc1", name: "Checking", currency: "USD" },
+      description: "Restaurant dinner",
+    };
+    mockFindMany.mockResolvedValue([txn]);
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    const { topExpenses } = await res.json();
+    expect(topExpenses[0].description).toBe("Restaurant dinner");
+    expect(topExpenses[0].categoryName).toBe("Food");
+    expect(topExpenses[0].accountName).toBe("Checking");
+  });
+
+  it("topExpenses handles transactions without category", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    const txn = {
+      id: "t-nocat",
+      type: "expense" as const,
+      amount: 150,
+      date: new Date("2024-03-05"),
+      categoryId: null,
+      category: null,
+      account: { id: "acc1", name: "Checking", currency: "USD" },
+      description: null,
+    };
+    mockFindMany.mockResolvedValue([txn]);
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    const { topExpenses } = await res.json();
+    expect(topExpenses[0].categoryName).toBeNull();
+    expect(topExpenses[0].categoryColor).toBeNull();
+    expect(topExpenses[0].description).toBeNull();
+  });
+
+  it("limits topExpenses to 5 items", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    const txns = Array.from({ length: 8 }, (_, i) =>
+      makeTxn("expense", 100 + i, `2024-01-0${i + 1}`)
+    );
+    mockFindMany.mockResolvedValue(txns);
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    const { topExpenses } = await res.json();
+    expect(topExpenses).toHaveLength(5);
+  });
+
+  it("incomeBreakdown accumulates totals for same category", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    mockFindMany.mockResolvedValue([
+      makeTxn("income", 100, "2024-01-01", "cat1", "Salary"),
+      makeTxn("income", 200, "2024-01-02", "cat1", "Salary"),
+    ]);
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    const { incomeBreakdown } = await res.json();
+    expect(incomeBreakdown).toHaveLength(1);
+    expect(incomeBreakdown[0].total).toBe(300);
+  });
+
+  it("does not include income transactions without category in incomeBreakdown", async () => {
+    mockAuthed(mockRequireVerifiedAuth, user);
+    const txn = {
+      id: "t-nocat",
+      type: "income" as const,
+      amount: 500,
+      date: new Date("2024-01-01"),
+      categoryId: null,
+      category: null,
+      account: { id: "acc1", name: "Checking", currency: "USD" },
+    };
+    mockFindMany.mockResolvedValue([txn]);
+    const res = await GET(makeReq("/api/analytics", "GET"));
+    const { incomeBreakdown } = await res.json();
+    expect(incomeBreakdown).toHaveLength(0);
+  });
 });
