@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -61,9 +62,13 @@ function NavContent({ user, theme, onThemeToggle, locale, onMobileClose, showLog
     <div className="flex h-full flex-col">
       {showLogo && (
         <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
-            F
-          </div>
+          <Image
+            src="/icons/apple-icon.png"
+            alt="FinanceFrz logo"
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
           <span className="font-semibold text-lg">FinanceFrz</span>
         </div>
       )}
@@ -118,9 +123,13 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
       {/* Mobile top header */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 bg-background border-b border-border md:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
-            F
-          </div>
+          <Image
+            src="/icons/apple-icon.png"
+            alt="FinanceFrz logo"
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
           <span className="font-semibold text-lg">FinanceFrz</span>
         </div>
         <Button

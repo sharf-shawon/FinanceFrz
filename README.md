@@ -1,5 +1,13 @@
 # FinanceFrz
 
+<p align="center">
+  <img src="public/icons/apple-icon.png" alt="FinanceFrz Logo" width="80" height="80" />
+</p>
+
+<p align="center">
+  <img src="public/og-image.png" alt="FinanceFrz Banner" width="800" />
+</p>
+
 [![CI](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/ci.yml/badge.svg)](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/ci.yml)
 [![Docker](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/docker.yml/badge.svg)](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/docker.yml)
 [![Coverage](https://img.shields.io/badge/coverage-93.8%25-brightgreen)](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/ci.yml)

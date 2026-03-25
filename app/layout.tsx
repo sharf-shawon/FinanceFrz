@@ -7,6 +7,29 @@ export const metadata: Metadata = {
   title: "FinanceFrz - Personal Finance",
   description: "Track your personal finances with ease",
   manifest: "/manifest.json",
+  authors: [{ name: "Sharfuddin Shawon" }],
+  creator: "Sharfuddin Shawon",
+  openGraph: {
+    type: "website",
+    siteName: "FinanceFrz",
+    title: "FinanceFrz - Personal Finance",
+    description: "Track your personal finances with ease",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "FinanceFrz - Personal Finance Tracker",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FinanceFrz - Personal Finance",
+    description: "Track your personal finances with ease",
+    images: ["/og-image.png"],
+    creator: "@sharf_shawon",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
