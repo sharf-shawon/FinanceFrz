@@ -10,6 +10,7 @@ const {
   mockTransactionDeleteMany,
   mockTransactionCreateMany,
   mockAccountFindFirst,
+  mockAccountCreate,
   mockAccountFindMany,
   mockCategoryFindMany,
   mockTransactionCount,
@@ -20,6 +21,7 @@ const {
   mockTransactionDeleteMany: vi.fn(),
   mockTransactionCreateMany: vi.fn(),
   mockAccountFindFirst: vi.fn(),
+  mockAccountCreate: vi.fn(),
   mockAccountFindMany: vi.fn(),
   mockCategoryFindMany: vi.fn(),
   mockTransactionCount: vi.fn(),
@@ -37,6 +39,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     account: {
       findFirst: mockAccountFindFirst,
+      create: mockAccountCreate,
       findMany: mockAccountFindMany,
     },
     category: {
@@ -95,16 +98,16 @@ describe("GET /api/daily-logs", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 200 with transactions, previousBalance, suggestions, accounts, categories", async () => {
+  it("returns 200 with transactions, previousBalance, suggestions, and categories", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
-    // findMany: [transactions, accounts, categories, prevTransactions, recentRaw]
+    mockAccountFindFirst.mockResolvedValue(account);
+    // findMany: [transactions for day, prevTransactions, recentRaw]
     mockTransactionFindMany
       .mockResolvedValueOnce([baseTxn])   // transactions for day
       .mockResolvedValueOnce([])           // prevTransactions
       .mockResolvedValueOnce([           // recentRaw suggestions
         { description: "Salary", type: "income", amount: 5000, quantity: 1, rate: 5000 },
       ]);
-    mockAccountFindMany.mockResolvedValue([account]);
     mockCategoryFindMany.mockResolvedValue([category]);
 
     const res = await GET(
@@ -115,7 +118,6 @@ describe("GET /api/daily-logs", () => {
     expect(json.date).toBe("2024-06-01");
     expect(json.transactions).toHaveLength(1);
     expect(json.previousBalance).toBe(0);
-    expect(json.accounts).toHaveLength(1);
     expect(json.categories).toHaveLength(1);
     expect(json.suggestions).toHaveLength(1);
     expect(json.suggestions[0]).toMatchObject({
@@ -128,6 +130,7 @@ describe("GET /api/daily-logs", () => {
 
   it("computes previousBalance correctly from prior transactions", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
+    mockAccountFindFirst.mockResolvedValue(account);
     mockTransactionFindMany
       .mockResolvedValueOnce([]) // today's txns
       .mockResolvedValueOnce([  // prev txns
@@ -136,7 +139,6 @@ describe("GET /api/daily-logs", () => {
         { type: "income", amount: 1000 },
       ])
       .mockResolvedValueOnce([]); // suggestions
-    mockAccountFindMany.mockResolvedValue([account]);
     mockCategoryFindMany.mockResolvedValue([]);
 
     const res = await GET(
@@ -150,6 +152,7 @@ describe("GET /api/daily-logs", () => {
 
   it("deduplicates suggestions by description+type (keeps latest)", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
+    mockAccountFindFirst.mockResolvedValue(account);
     mockTransactionFindMany
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
@@ -158,7 +161,6 @@ describe("GET /api/daily-logs", () => {
         { description: "rice", type: "expense", amount: 240, quantity: 3, rate: 80 }, // duplicate (case-insensitive)
         { description: "Rice", type: "income", amount: 500, quantity: 1, rate: 500 }, // same name, different type
       ]);
-    mockAccountFindMany.mockResolvedValue([account]);
     mockCategoryFindMany.mockResolvedValue([]);
 
     const res = await GET(
@@ -177,6 +179,7 @@ describe("GET /api/daily-logs", () => {
 
   it("excludes suggestions with null description", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
+    mockAccountFindFirst.mockResolvedValue(account);
     mockTransactionFindMany
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
@@ -184,7 +187,6 @@ describe("GET /api/daily-logs", () => {
         { description: null, type: "expense", amount: 100, quantity: 1, rate: 100 },
         { description: "Milk", type: "expense", amount: 50, quantity: 1, rate: 50 },
       ]);
-    mockAccountFindMany.mockResolvedValue([account]);
     mockCategoryFindMany.mockResolvedValue([]);
 
     const res = await GET(
@@ -197,13 +199,13 @@ describe("GET /api/daily-logs", () => {
 
   it("uses amount as rate fallback when rate is null", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
+    mockAccountFindFirst.mockResolvedValue(account);
     mockTransactionFindMany
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([
         { description: "Taxi", type: "expense", amount: 200, quantity: 1, rate: null },
       ]);
-    mockAccountFindMany.mockResolvedValue([account]);
     mockCategoryFindMany.mockResolvedValue([]);
 
     const res = await GET(
@@ -268,11 +270,14 @@ describe("POST /api/daily-logs", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 400 when accountId is missing", async () => {
+  it("accountId is optional – succeeds when accountId is omitted", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
+    mockAccountFindFirst.mockResolvedValue(account);
+    mockCategoryFindMany.mockResolvedValue([]);
+    mockPrismaTransaction.mockResolvedValue([{ count: 0 }, { count: 2 }]);
     const { accountId: _a, ...noAcc } = validBody;
     const res = await POST(makeReq("/api/daily-logs", "POST", noAcc));
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(200);
   });
 
   it("returns 400 when a row has invalid type", async () => {
@@ -308,13 +313,21 @@ describe("POST /api/daily-logs", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 400 when account does not belong to user", async () => {
+  it("creates Daily Logs account automatically when it does not exist yet", async () => {
     mockAuthed(mockRequireVerifiedAuth, user);
-    mockAccountFindFirst.mockResolvedValue(null);
+    mockAccountFindFirst.mockResolvedValue(null); // not found → triggers create
+    mockAccountCreate.mockResolvedValue(account);
+    mockCategoryFindMany.mockResolvedValue([]);
+    mockPrismaTransaction.mockResolvedValue([{ count: 0 }, { count: 2 }]);
     const res = await POST(makeReq("/api/daily-logs", "POST", validBody));
-    expect(res.status).toBe(400);
-    const json = await res.json();
-    expect(json.error).toMatch(/account/i);
+    expect(res.status).toBe(200);
+    expect(mockAccountCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: user.id,
+        name: "Daily Logs",
+        type: "other",
+      }),
+    });
   });
 
   it("returns 400 when a category does not belong to user", async () => {

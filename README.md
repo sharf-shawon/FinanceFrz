@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/ci.yml/badge.svg)](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/ci.yml)
 [![Docker](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/docker.yml/badge.svg)](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/docker.yml)
-[![Coverage](https://img.shields.io/badge/coverage-93.8%25-brightgreen)](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/sharf-shawon/FinanceFrz/actions/workflows/ci.yml)
 
 A Personal Finance App for Frz
 
@@ -55,11 +55,11 @@ npm test
 # Run with watch mode
 npm run test:watch
 
-# Run with coverage report (enforces ≥80% thresholds)
+# Run with coverage report (enforces ≥95% thresholds)
 npm run test:coverage
 ```
 
-**Current coverage: 93.8% statements · 91.4% branches · 92.7% functions** (141 tests across 17 test files).
+**Current coverage: 100% statements · 98.9% branches · 100% functions** (234 tests across 19 test files).
 
 ## Scripts
 
@@ -74,7 +74,7 @@ npm run test:coverage
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router) · next-intl
+- **Framework**: Next.js 16 (App Router) · next-intl
 - **Database**: SQLite via Prisma ORM
 - **Auth**: Custom session-based auth with bcrypt
 - **Email**: Resend
