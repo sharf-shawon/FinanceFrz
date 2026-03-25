@@ -34,9 +34,10 @@ interface NavContentProps {
   onThemeToggle: () => void;
   locale: string;
   onMobileClose: () => void;
+  showLogo?: boolean;
 }
 
-function NavContent({ user, theme, onThemeToggle, locale, onMobileClose }: NavContentProps) {
+function NavContent({ user, theme, onThemeToggle, locale, onMobileClose, showLogo = true }: NavContentProps) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const router = useRouter();
@@ -58,12 +59,14 @@ function NavContent({ user, theme, onThemeToggle, locale, onMobileClose }: NavCo
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
-          F
+      {showLogo && (
+        <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
+            F
+          </div>
+          <span className="font-semibold text-lg">FinanceFrz</span>
         </div>
-        <span className="font-semibold text-lg">FinanceFrz</span>
-      </div>
+      )}
 
       <nav className="flex-1 px-2 py-4 space-y-1">
         {navItems.map((item) => {
@@ -112,21 +115,28 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile toggle */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden"
-        onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label="Toggle menu"
-      >
-        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
+      {/* Mobile top header */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 bg-background border-b border-border md:hidden">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
+            F
+          </div>
+          <span className="font-semibold text-lg">FinanceFrz</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
+      </header>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          className="fixed top-16 inset-x-0 bottom-0 z-40 bg-black/60 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -134,7 +144,7 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-full w-64 bg-sidebar text-sidebar-foreground transform transition-transform duration-200 md:hidden",
+          "fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 bg-sidebar text-sidebar-foreground transform transition-transform duration-200 md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -144,6 +154,7 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
           onThemeToggle={onThemeToggle}
           locale={locale}
           onMobileClose={() => setMobileOpen(false)}
+          showLogo={false}
         />
       </aside>
 
