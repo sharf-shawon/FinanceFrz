@@ -12,6 +12,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   Calendar,
+  BookOpen,
   LogOut,
   Menu,
   X,
@@ -46,6 +47,7 @@ function NavContent({ user, theme, onThemeToggle, locale, onMobileClose, showLog
   const navItems = [
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
     { href: "/transactions", label: t("transactions"), icon: ArrowLeftRight },
+    { href: "/daily-logs", label: t("dailyLogs"), icon: BookOpen },
     { href: "/analytics", label: t("analytics"), icon: BarChart3 },
     { href: "/calendar", label: t("calendar"), icon: Calendar },
     { href: "/accounts", label: t("accounts"), icon: CreditCard },

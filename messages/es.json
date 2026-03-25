@@ -6,7 +6,8 @@
     "transactions": "Transacciones",
     "analytics": "Análisis",
     "calendar": "Calendario",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "dailyLogs": "Registros Diarios"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -164,5 +165,33 @@
     "confirmDelete": "¿Estás seguro de que deseas eliminar esto?",
     "language": "Idioma",
     "descriptionOptional": "Descripción (opcional)"
+  },
+  "dailyLogs": {
+    "title": "Registros Diarios",
+    "subtitle": "Registra tus ingresos y gastos diarios",
+    "previousBalance": "Saldo Anterior",
+    "income": "Ingresos",
+    "expense": "Gastos",
+    "description": "Descripción",
+    "qty": "Cant.",
+    "rate": "Precio",
+    "total": "Total",
+    "addIncome": "Agregar Ingreso",
+    "addExpense": "Agregar Gasto",
+    "totalIncome": "Total Ingresos",
+    "totalExpense": "Total Gastos",
+    "netBalance": "Saldo Neto",
+    "save": "Guardar",
+    "discard": "Descartar",
+    "previousDay": "Día anterior",
+    "nextDay": "Día siguiente",
+    "account": "Cuenta",
+    "selectAccount": "Seleccionar cuenta",
+    "descriptionPlaceholder": "ej. Arroz, Salario…",
+    "ratePlaceholder": "0.00",
+    "unsavedChanges": "Tienes cambios sin guardar.",
+    "unsavedChangesTitle": "Cambios Sin Guardar",
+    "unsavedChangesDesc": "Tienes cambios sin guardar. ¿Deseas guardarlos o descartarlos antes de salir?",
+    "stayOnPage": "Quedarse en la página"
   }
 }
