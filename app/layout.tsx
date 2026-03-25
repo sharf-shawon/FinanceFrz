@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "FinanceFrz",
+    url: "/",
     title: "FinanceFrz - Personal Finance",
     description: "Track your personal finances with ease",
     images: [
@@ -23,6 +24,9 @@ export const metadata: Metadata = {
         alt: "FinanceFrz - Personal Finance Tracker",
       },
     ],
+  },
+  facebook:{
+    appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "",
   },
   twitter: {
     card: "summary_large_image",
