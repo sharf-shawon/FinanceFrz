@@ -1,9 +1,7 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: runner
+    image: ghcr.io/sharf-shawon/financefrz:latest
+    pull_policy: always
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL_PROD:-file:/app/data/prod.db}
