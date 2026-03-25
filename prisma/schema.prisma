@@ -75,6 +75,8 @@ model Transaction {
   categoryId  String?
   type        String
   amount      Float
+  quantity    Float     @default(1)
+  rate        Float?
   date        DateTime
   description String?
   createdAt   DateTime  @default(now())

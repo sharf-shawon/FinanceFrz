@@ -6,7 +6,8 @@
     "transactions": "লেনদেন",
     "analytics": "বিশ্লেষণ",
     "calendar": "ক্যালেন্ডার",
-    "logout": "লগ আউট"
+    "logout": "লগ আউট",
+    "dailyLogs": "দৈনিক লগ"
   },
   "auth": {
     "signIn": "সাইন ইন করুন",
@@ -164,5 +165,33 @@
     "confirmDelete": "আপনি কি এটি মুছে ফেলতে নিশ্চিত?",
     "language": "ভাষা",
     "descriptionOptional": "বিবরণ (ঐচ্ছিক)"
+  },
+  "dailyLogs": {
+    "title": "দৈনিক লগ",
+    "subtitle": "আপনার দৈনিক আয় ও ব্যয় লিপিবদ্ধ করুন",
+    "previousBalance": "আগের ব্যালেন্স",
+    "income": "আয়",
+    "expense": "ব্যয়",
+    "description": "বিবরণ",
+    "qty": "পরিমাণ",
+    "rate": "হার",
+    "total": "মোট",
+    "addIncome": "আয় যোগ করুন",
+    "addExpense": "ব্যয় যোগ করুন",
+    "totalIncome": "মোট আয়",
+    "totalExpense": "মোট ব্যয়",
+    "netBalance": "নেট ব্যালেন্স",
+    "save": "সংরক্ষণ করুন",
+    "discard": "বাতিল করুন",
+    "previousDay": "আগের দিন",
+    "nextDay": "পরের দিন",
+    "account": "অ্যাকাউন্ট",
+    "selectAccount": "অ্যাকাউন্ট নির্বাচন করুন",
+    "descriptionPlaceholder": "যেমন: চাল, বেতন…",
+    "ratePlaceholder": "০.০০",
+    "unsavedChanges": "আপনার অসংরক্ষিত পরিবর্তন রয়েছে।",
+    "unsavedChangesTitle": "অসংরক্ষিত পরিবর্তন",
+    "unsavedChangesDesc": "আপনার অসংরক্ষিত পরিবর্তন রয়েছে। চলে যাওয়ার আগে কি সংরক্ষণ করবেন নাকি বাতিল করবেন?",
+    "stayOnPage": "এই পাতায় থাকুন"
   }
 }
