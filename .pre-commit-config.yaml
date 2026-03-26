@@ -21,7 +21,7 @@ repos:
       - id: eslint
         name: ESLint
         language: node
-        entry: npx eslint --max-warnings=0
+        entry: npx eslint --max-warnings=0 --no-warn-ignored
         types_or: [ts, tsx, javascript]
         exclude: "^(app/generated/|coverage/|\\.next/)"
         pass_filenames: true

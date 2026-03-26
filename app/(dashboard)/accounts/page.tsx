@@ -113,7 +113,7 @@ export default function AccountsPage() {
                   <TableHead>{t("name")}</TableHead>
                   <TableHead>{t("type")}</TableHead>
                   <TableHead>{t("currency")}</TableHead>
-                  <TableHead>{t("currentBalance")}</TableHead>
+                  <TableHead className="text-right">{t("currentBalance")}</TableHead>
                   <TableHead className="text-right">{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -125,7 +125,7 @@ export default function AccountsPage() {
                       <Badge variant="secondary">{typeLabel(account.type)}</Badge>
                     </TableCell>
                     <TableCell>{account.currency}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <span className={`font-semibold ${account.balance >= 0 ? "text-green-600" : "text-red-600"}`}>
                         {formatCurrency(account.balance, account.currency)}
                       </span>

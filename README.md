@@ -81,4 +81,3 @@ npm run test:coverage
 - **UI**: shadcn/ui · Tailwind CSS
 - **Testing**: Vitest · @vitest/coverage-v8
 - **Containerisation**: Docker (multi-stage) · Docker Compose
-
