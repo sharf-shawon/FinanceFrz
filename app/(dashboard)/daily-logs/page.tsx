@@ -453,55 +453,113 @@ export default function DailyLogsPage() {
   ) {
     const incomeType = type === "income";
     return rows.map((row, idx) => (
-      <div
-        key={row._key}
-        className="grid grid-cols-[1fr_80px_80px_90px_36px] gap-2 items-center"
-        data-testid={`${type}-row`}
-      >
-        <AutocompleteInput
-          value={row.description}
-          suggestions={suggLabels}
-          placeholder={t("descriptionPlaceholder")}
-          aria-label={`${type} row ${idx + 1} description`}
-          onChange={(v) => updateRow(setRows, row._key, "description", v)}
-          onSuggestionSelect={(v) => applySuggestion(type, setRows, row._key, v)}
-        />
-        <Input
-          type="number"
-          min="0.001"
-          step="any"
-          value={row.quantity}
-          aria-label={`${type} row ${idx + 1} quantity`}
-          onChange={(e) => updateRow(setRows, row._key, "quantity", e.target.value)}
-          className="text-right"
-        />
-        <Input
-          type="number"
-          min="0"
-          step="any"
-          value={row.rate}
-          placeholder={t("ratePlaceholder")}
-          aria-label={`${type} row ${idx + 1} rate`}
-          onChange={(e) => updateRow(setRows, row._key, "rate", e.target.value)}
-          className="text-right"
-        />
-        <div
-          className={`text-right text-sm font-semibold tabular-nums ${
-            incomeType ? "text-green-600" : "text-red-600"
-          }`}
-          aria-label={`${type} row ${idx + 1} total`}
-        >
-          {rowTotal(row) > 0 ? formatCurrency(rowTotal(row), currency) : "—"}
+      <div key={row._key} data-testid={`${type}-row`}>
+        {/* ── Mobile layout (< sm) ── */}
+        <div className="sm:hidden space-y-1.5">
+          <AutocompleteInput
+            value={row.description}
+            suggestions={suggLabels}
+            placeholder={t("descriptionPlaceholder")}
+            aria-label={`${type} row ${idx + 1} description`}
+            onChange={(v) => updateRow(setRows, row._key, "description", v)}
+            onSuggestionSelect={(v) => applySuggestion(type, setRows, row._key, v)}
+          />
+          <div className="grid grid-cols-[1fr_1fr_80px_36px] gap-2 items-end">
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">{t("qty")}</p>
+              <Input
+                type="number"
+                min="0.001"
+                step="any"
+                value={row.quantity}
+                aria-label={`${type} row ${idx + 1} quantity`}
+                onChange={(e) => updateRow(setRows, row._key, "quantity", e.target.value)}
+                className="text-right"
+              />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">{t("rate")}</p>
+              <Input
+                type="number"
+                min="0"
+                step="any"
+                value={row.rate}
+                placeholder={t("ratePlaceholder")}
+                aria-label={`${type} row ${idx + 1} rate`}
+                onChange={(e) => updateRow(setRows, row._key, "rate", e.target.value)}
+                className="text-right"
+              />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5 text-right">{t("total")}</p>
+              <div
+                className={`text-right text-sm font-semibold tabular-nums py-2 ${
+                  incomeType ? "text-green-600" : "text-red-600"
+                }`}
+                aria-label={`${type} row ${idx + 1} total`}
+              >
+                {rowTotal(row) > 0 ? formatCurrency(rowTotal(row), currency) : "—"}
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 self-end text-muted-foreground hover:text-destructive"
+              onClick={() => deleteRow(setRows, row._key)}
+              aria-label={`Delete ${type} row ${idx + 1}`}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-          onClick={() => deleteRow(setRows, row._key)}
-          aria-label={`Delete ${type} row ${idx + 1}`}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+
+        {/* ── Desktop layout (sm+) ── */}
+        <div className="hidden sm:grid sm:grid-cols-[1fr_80px_80px_90px_36px] sm:gap-2 sm:items-center">
+          <AutocompleteInput
+            value={row.description}
+            suggestions={suggLabels}
+            placeholder={t("descriptionPlaceholder")}
+            aria-label={`${type} row ${idx + 1} description`}
+            onChange={(v) => updateRow(setRows, row._key, "description", v)}
+            onSuggestionSelect={(v) => applySuggestion(type, setRows, row._key, v)}
+          />
+          <Input
+            type="number"
+            min="0.001"
+            step="any"
+            value={row.quantity}
+            aria-label={`${type} row ${idx + 1} quantity`}
+            onChange={(e) => updateRow(setRows, row._key, "quantity", e.target.value)}
+            className="text-right"
+          />
+          <Input
+            type="number"
+            min="0"
+            step="any"
+            value={row.rate}
+            placeholder={t("ratePlaceholder")}
+            aria-label={`${type} row ${idx + 1} rate`}
+            onChange={(e) => updateRow(setRows, row._key, "rate", e.target.value)}
+            className="text-right"
+          />
+          <div
+            className={`text-right text-sm font-semibold tabular-nums ${
+              incomeType ? "text-green-600" : "text-red-600"
+            }`}
+            aria-label={`${type} row ${idx + 1} total`}
+          >
+            {rowTotal(row) > 0 ? formatCurrency(rowTotal(row), currency) : "—"}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            onClick={() => deleteRow(setRows, row._key)}
+            aria-label={`Delete ${type} row ${idx + 1}`}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
     ));
   }
@@ -585,8 +643,8 @@ export default function DailyLogsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base text-green-600">{t("income")}</CardTitle>
-              {/* Column labels */}
-              <div className="grid grid-cols-[1fr_80px_80px_90px_36px] gap-2 text-xs text-muted-foreground mt-1">
+              {/* Column labels – desktop only */}
+              <div className="hidden sm:grid sm:grid-cols-[1fr_80px_80px_90px_36px] sm:gap-2 text-xs text-muted-foreground mt-1">
                 <span>{t("description")}</span>
                 <span className="text-right">{t("qty")}</span>
                 <span className="text-right">{t("rate")}</span>
@@ -623,7 +681,8 @@ export default function DailyLogsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base text-red-600">{t("expense")}</CardTitle>
-              <div className="grid grid-cols-[1fr_80px_80px_90px_36px] gap-2 text-xs text-muted-foreground mt-1">
+              {/* Column labels – desktop only */}
+              <div className="hidden sm:grid sm:grid-cols-[1fr_80px_80px_90px_36px] sm:gap-2 text-xs text-muted-foreground mt-1">
                 <span>{t("description")}</span>
                 <span className="text-right">{t("qty")}</span>
                 <span className="text-right">{t("rate")}</span>

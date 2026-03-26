@@ -224,12 +224,12 @@ export default function TransactionsPage() {
                   <TableHead>{t("description")}</TableHead>
                   <TableHead>{t("category")}</TableHead>
                   <TableHead>{t("account")}</TableHead>
-                  <TableHead>
-                    <button className="flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("amount")}>
+                  <TableHead className="text-right">
+                    <button className="flex items-center gap-1 hover:text-foreground ml-auto" onClick={() => toggleSort("amount")}>
                       {t("amount")} <ArrowUpDown className="h-3 w-3" />
                     </button>
                   </TableHead>
-                  <TableHead>{t("runningBalance")}</TableHead>
+                  <TableHead className="text-right">{t("runningBalance")}</TableHead>
                   <TableHead className="text-right">{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -249,12 +249,12 @@ export default function TransactionsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm">{txn.account.name}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <span className={`font-semibold ${txn.type === "income" ? "text-green-600" : "text-red-600"}`}>
                         {txn.type === "income" ? "+" : "-"}{formatCurrency(txn.amount, txn.account.currency)}
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <span className={`text-sm font-medium ${(runningBalances[txn.id] ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
                         {formatCurrency(runningBalances[txn.id] ?? 0, txn.account.currency)}
                       </span>
