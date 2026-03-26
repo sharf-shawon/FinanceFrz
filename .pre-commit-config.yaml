@@ -1,0 +1,39 @@
+repos:
+  # Standard file hygiene hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: "^(public/|coverage/)"
+      - id: end-of-file-fixer
+        exclude: "^(public/|coverage/)"
+      - id: check-yaml
+      - id: check-json
+        exclude: "^(package-lock\\.json|tsconfig.*\\.json)"
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: detect-private-key
+
+  # ESLint — lint TypeScript and JavaScript files
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint
+        language: node
+        entry: npx eslint --max-warnings=0
+        types_or: [ts, tsx, javascript]
+        exclude: "^(app/generated/|coverage/|\\.next/)"
+        pass_filenames: true
+        additional_dependencies: []
+
+  # TypeScript type-check (runs on the whole project, not per-file)
+  - repo: local
+    hooks:
+      - id: typescript
+        name: TypeScript type-check
+        language: node
+        entry: npx tsc --noEmit
+        pass_filenames: false
+        types_or: [ts, tsx]
+        exclude: "^(app/generated/|coverage/|\\.next/)"
