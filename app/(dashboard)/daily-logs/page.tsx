@@ -13,7 +13,14 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, AlertTriangle, Download, Pin, PinOff } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -182,6 +189,10 @@ function AutocompleteInput({
 // ---------------------------------------------------------------------------
 // Main Page
 // ---------------------------------------------------------------------------
+
+/** Dark background applied to the export canvas (mirrors --background in dark mode). */
+const EXPORT_DARK_BG = "hsl(222.2, 84%, 4.9%)";
+
 export default function DailyLogsPage() {
   const t = useTranslations("dailyLogs");
   const tc = useTranslations("common");
@@ -195,8 +206,23 @@ export default function DailyLogsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [exportError, setExportError] = useState("");
+
+  // Export guard state (shown when user tries to export with unsaved changes)
+  const [exportGuardOpen, setExportGuardOpen] = useState(false);
+  const [pendingExportType, setPendingExportType] = useState<"png" | "pdf" | null>(null);
+
+  // Summary card sticky pin state (persisted in localStorage)
+  const [isSummaryPinned, setIsSummaryPinned] = useState(false);
+
+  const exportContentRef = useRef<HTMLDivElement>(null);
+  const exportHeaderRef = useRef<HTMLDivElement>(null);
+  const exportFooterRef = useRef<HTMLDivElement>(null);
+  const exportSiteUrlRef = useRef<HTMLSpanElement>(null);
+  const summaryCardWrapperRef = useRef<HTMLDivElement>(null);
 
   // Modal states
   const [navGuardOpen, setNavGuardOpen] = useState(false);
@@ -255,6 +281,12 @@ export default function DailyLogsPage() {
     if (isFirstMount.current) { isFirstMount.current = false; return; }
     loadData(currentDate);
   }, [currentDate, loadData]);
+
+  // Load sticky-pin preference from localStorage after hydration
+  useEffect(() => {
+    const stored = localStorage.getItem("dailyLogs.summaryPinned");
+    if (stored === "true") setIsSummaryPinned(true);
+  }, []);
 
   // ---------------------------------------------------------------------------
   // beforeunload guard
@@ -401,6 +433,105 @@ export default function DailyLogsPage() {
 
   function handleDiscard() {
     loadData(currentDate);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Export – unified helper with branding header/footer
+  // ---------------------------------------------------------------------------
+  async function doExport(format: "png" | "pdf") {
+    if (!exportContentRef.current) return;
+
+    const node = exportContentRef.current;
+    const isDark = document.documentElement.classList.contains("dark");
+    const origPadding = node.style.padding;
+    const origBg = node.style.backgroundColor;
+
+    // Populate the site URL span imperatively to avoid SSR mismatch
+    if (exportSiteUrlRef.current) {
+      exportSiteUrlRef.current.textContent =
+        `${window.location.origin} · Generated ${new Date().toLocaleDateString()}`;
+    }
+
+    // Reveal branding elements and add export styling
+    if (exportHeaderRef.current) exportHeaderRef.current.style.display = "block";
+    if (exportFooterRef.current) exportFooterRef.current.style.display = "flex";
+    node.style.padding = "32px";
+    node.style.backgroundColor = isDark ? EXPORT_DARK_BG : "#ffffff";
+
+    // If the summary card is pinned (position: fixed), temporarily reset it to
+    // relative so it renders in normal document flow inside the captured canvas.
+    const summaryWrapper = summaryCardWrapperRef.current;
+    const origSummaryPosition = summaryWrapper ? summaryWrapper.style.position : "";
+    if (summaryWrapper && isSummaryPinned) {
+      summaryWrapper.style.position = "relative";
+    }
+
+    setExporting(true);
+    setExportError("");
+    try {
+      if (format === "png") {
+        const { toPng } = await import("html-to-image");
+        // pixelRatio:1 avoids capturing at 2× on retina screens, keeping file size reasonable
+        const dataUrl = await toPng(node, { cacheBust: true, pixelRatio: 1 });
+        const link = document.createElement("a");
+        link.download = `daily-log-${currentDate}.png`;
+        link.href = dataUrl;
+        link.click();
+      } else {
+        // Use JPEG (quality 0.85) for PDF to keep file size well under 1 MB
+        const { toJpeg } = await import("html-to-image");
+        const dataUrl = await toJpeg(node, { cacheBust: true, pixelRatio: 1, quality: 0.85 });
+        const { jsPDF } = await import("jspdf");
+        const img = new Image();
+        img.src = dataUrl;
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("Image failed to load"));
+        });
+        const { width: pxWidth, height: pxHeight } = img;
+        const orientation = pxWidth > pxHeight ? "landscape" : "portrait";
+        const pdf = new jsPDF({ orientation, unit: "px", format: [pxWidth, pxHeight], compress: true });
+        pdf.addImage(dataUrl, "JPEG", 0, 0, pxWidth, pxHeight);
+        pdf.save(`daily-log-${currentDate}.pdf`);
+      }
+    } catch {
+      setExportError(tc("error"));
+    } finally {
+      // Restore original state
+      if (exportHeaderRef.current) exportHeaderRef.current.style.display = "none";
+      if (exportFooterRef.current) exportFooterRef.current.style.display = "none";
+      node.style.padding = origPadding;
+      node.style.backgroundColor = origBg;
+      if (summaryWrapper) summaryWrapper.style.position = origSummaryPosition;
+      setExporting(false);
+    }
+  }
+
+  function handleExportPng() {
+    if (isDirty) {
+      setPendingExportType("png");
+      setExportGuardOpen(true);
+      return;
+    }
+    doExport("png");
+  }
+
+  function handleExportPdf() {
+    if (isDirty) {
+      setPendingExportType("pdf");
+      setExportGuardOpen(true);
+      return;
+    }
+    doExport("pdf");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Summary card pin toggle
+  // ---------------------------------------------------------------------------
+  function toggleSummaryPin() {
+    const next = !isSummaryPinned;
+    setIsSummaryPinned(next);
+    localStorage.setItem("dailyLogs.summaryPinned", String(next));
   }
 
   // ---------------------------------------------------------------------------
@@ -599,6 +730,12 @@ export default function DailyLogsPage() {
         </p>
       )}
 
+      {exportError && (
+        <p className="text-sm text-destructive" role="alert" data-testid="export-error">
+          {exportError}
+        </p>
+      )}
+
       {/* Date navigation */}
       <Card>
         <CardContent className="pt-4">
@@ -638,7 +775,35 @@ export default function DailyLogsPage() {
       {loading ? (
         <div className="py-12 text-center text-muted-foreground">{tc("loading")}</div>
       ) : (
-        <>
+        <div ref={exportContentRef} className="space-y-6">
+          {/* ── Export-only branding header (hidden in UI, revealed during capture) ── */}
+          <div
+            ref={exportHeaderRef}
+            style={{ display: "none" }}
+            className="mb-6 pb-4 border-b"
+            data-testid="export-header"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/icons/apple-icon.png"
+                  alt="FinanceFrz logo"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+                <div>
+                  <div className="text-xl font-bold">FinanceFrz</div>
+                  <div className="text-sm text-muted-foreground">Daily Financial Log</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-base font-semibold">{displayDate}</div>
+              </div>
+            </div>
+          </div>
+
           {/* Income section */}
           <Card>
             <CardHeader className="pb-3">
@@ -715,55 +880,113 @@ export default function DailyLogsPage() {
             </CardContent>
           </Card>
 
-          {/* Footer summary */}
-          <Card>
-            <CardContent className="pt-4">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("previousBalance")}</span>
-                  <span className="tabular-nums font-medium">
-                    {formatCurrency(previousBalance, currency)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">+ {t("totalIncome")}</span>
-                  <span className="tabular-nums font-medium text-green-600">
-                    {formatCurrency(totalIncome, currency)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">- {t("totalExpense")}</span>
-                  <span className="tabular-nums font-medium text-red-600">
-                    {formatCurrency(totalExpense, currency)}
-                  </span>
-                </div>
-                <div className="flex justify-between border-t pt-2">
-                  <span className="font-semibold">{t("netBalance")}</span>
-                  <span
-                    className={`tabular-nums font-bold text-base ${
-                      netBalance >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                    data-testid="net-balance"
-                  >
-                    {formatCurrency(netBalance, currency)}
-                  </span>
-                </div>
-              </div>
+          {/* ── Export-only footer (hidden in UI, revealed during capture) ── */}
+          <div
+            ref={exportFooterRef}
+            style={{ display: "none" }}
+            className="mt-6 pt-4 border-t items-center justify-between text-xs text-muted-foreground"
+            data-testid="export-footer"
+          >
+            <span>FinanceFrz – Personal Finance Manager</span>
+            <span ref={exportSiteUrlRef} />
+          </div>
 
-              {/* Save / Discard actions */}
-              <div className="mt-4 flex justify-end gap-2">
-                {isDirty && (
-                  <Button variant="outline" onClick={handleDiscard} disabled={saving}>
-                    {t("discard")}
-                  </Button>
-                )}
-                <Button onClick={handleSave} disabled={saving}>
-                  {saving ? tc("saving") : tc("save")}
+          {/* Footer summary – pinnable to viewport bottom */}
+          <div
+            ref={summaryCardWrapperRef}
+            className={cn(
+              isSummaryPinned && "fixed bottom-0 left-0 right-0 z-50 md:left-64 animate-in slide-in-from-bottom duration-300"
+            )}
+            data-testid="summary-card-wrapper"
+          >
+            <Card
+              className={cn(
+                "transition-shadow duration-300",
+                isSummaryPinned && "rounded-t-xl rounded-b-none shadow-[0_-4px_24px_rgba(0,0,0,0.1)]"
+              )}
+            >
+              <CardContent className="pt-4 relative">
+                {/* Pin / unpin button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={toggleSummaryPin}
+                  aria-label={isSummaryPinned ? t("unpinSummary") : t("pinSummary")}
+                  data-testid="pin-summary-btn"
+                >
+                  {isSummaryPinned
+                    ? <PinOff className="h-3.5 w-3.5" />
+                    : <Pin className="h-3.5 w-3.5" />
+                  }
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </>
+
+                <div className="space-y-2 text-sm pr-8">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("previousBalance")}</span>
+                    <span className="tabular-nums font-medium">
+                      {formatCurrency(previousBalance, currency)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">+ {t("totalIncome")}</span>
+                    <span className="tabular-nums font-medium text-green-600">
+                      {formatCurrency(totalIncome, currency)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">- {t("totalExpense")}</span>
+                    <span className="tabular-nums font-medium text-red-600">
+                      {formatCurrency(totalExpense, currency)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <span className="font-semibold">{t("netBalance")}</span>
+                    <span
+                      className={`tabular-nums font-bold text-base ${
+                        netBalance >= 0 ? "text-green-600" : "text-red-600"
+                      }`}
+                      data-testid="net-balance"
+                    >
+                      {formatCurrency(netBalance, currency)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Save / Discard actions */}
+                <div className="mt-4 flex justify-end gap-2">
+                  {isDirty && (
+                    <Button variant="outline" onClick={handleDiscard} disabled={saving}>
+                      {t("discard")}
+                    </Button>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" disabled={exporting} aria-label={t("exportButton")}>
+                        <Download className="h-4 w-4 mr-2" />
+                        {exporting ? t("exporting") : t("exportButton")}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleExportPng}>
+                        {t("exportAsPng")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleExportPdf}>
+                        {t("exportAsPdf")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button onClick={handleSave} disabled={saving}>
+                    {saving ? tc("saving") : tc("save")}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Spacer so content above isn't hidden under the pinned card */}
+          {isSummaryPinned && <div className="h-52" aria-hidden="true" data-testid="pin-spacer" />}
+        </div>
       )}
 
       {/* Nav-guard modal */}
@@ -782,6 +1005,42 @@ export default function DailyLogsPage() {
             </Button>
             <Button onClick={guardSaveAndNavigate} disabled={saving}>
               {saving ? tc("saving") : tc("save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export-guard modal – shown when exporting with unsaved changes */}
+      <Dialog
+        open={exportGuardOpen}
+        onOpenChange={(o) => {
+          if (!o) { setExportGuardOpen(false); setPendingExportType(null); }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("exportUnsavedTitle")}</DialogTitle>
+            <DialogDescription>{t("exportUnsavedDesc")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => { setExportGuardOpen(false); setPendingExportType(null); }}
+            >
+              {tc("cancel")}
+            </Button>
+            <Button
+              onClick={async () => {
+                const type = pendingExportType;
+                setExportGuardOpen(false);
+                setPendingExportType(null);
+                await handleSave();
+                if (type) await doExport(type);
+              }}
+              disabled={saving}
+              data-testid="save-and-export-btn"
+            >
+              {saving ? tc("saving") : t("saveAndExport")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -192,6 +192,15 @@
     "unsavedChanges": "You have unsaved changes.",
     "unsavedChangesTitle": "Unsaved Changes",
     "unsavedChangesDesc": "You have unsaved changes. Do you want to save or discard them before leaving?",
-    "stayOnPage": "Stay on page"
+    "stayOnPage": "Stay on page",
+    "exportButton": "Export",
+    "exportAsPng": "Export as PNG",
+    "exportAsPdf": "Export as PDF",
+    "exporting": "Exporting…",
+    "exportUnsavedTitle": "Unsaved Changes",
+    "exportUnsavedDesc": "Your log has unsaved changes. Save before exporting to include the latest data.",
+    "saveAndExport": "Save & Export",
+    "pinSummary": "Pin summary to footer",
+    "unpinSummary": "Unpin summary"
   }
 }

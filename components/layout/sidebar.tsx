@@ -63,7 +63,12 @@ function NavContent({ user, theme, onThemeToggle, locale, onMobileClose, showLog
   return (
     <div className="flex h-full flex-col">
       {showLogo && (
-        <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
+        <Link
+          href="/dashboard"
+          onClick={onMobileClose}
+          className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border hover:opacity-80 transition-opacity"
+          aria-label="FinanceFrz – go to dashboard"
+        >
           <Image
             src="/icons/apple-icon.png"
             alt="FinanceFrz logo"
@@ -72,7 +77,7 @@ function NavContent({ user, theme, onThemeToggle, locale, onMobileClose, showLog
             className="rounded-full"
           />
           <span className="font-semibold text-lg">FinanceFrz</span>
-        </div>
+        </Link>
       )}
 
       <nav className="flex-1 px-2 py-4 space-y-1">
@@ -124,7 +129,11 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
     <>
       {/* Mobile top header */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 bg-background border-b border-border md:hidden">
-        <div className="flex items-center gap-2">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          aria-label="FinanceFrz – go to dashboard"
+        >
           <Image
             src="/icons/apple-icon.png"
             alt="FinanceFrz logo"
@@ -133,7 +142,7 @@ export function Sidebar({ user, theme, onThemeToggle, locale }: SidebarProps) {
             className="rounded-full"
           />
           <span className="font-semibold text-lg">FinanceFrz</span>
-        </div>
+        </Link>
         <Button
           variant="ghost"
           size="icon"
