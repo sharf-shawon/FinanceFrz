@@ -6,8 +6,9 @@ import "@testing-library/jest-dom";
 // ---------------------------------------------------------------------------
 // Hoisted mock factories (must be before vi.mock calls)
 // ---------------------------------------------------------------------------
-const { mockToPng } = vi.hoisted(() => ({
+const { mockToPng, mockToJpeg } = vi.hoisted(() => ({
   mockToPng: vi.fn(),
+  mockToJpeg: vi.fn(),
 }));
 
 const { MockJsPDF, mockJsPdfAddImage, mockJsPdfSave } = vi.hoisted(() => {
@@ -34,7 +35,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
-vi.mock("html-to-image", () => ({ toPng: mockToPng }));
+vi.mock("html-to-image", () => ({ toPng: mockToPng, toJpeg: mockToJpeg }));
 vi.mock("jspdf", () => ({ jsPDF: MockJsPDF }));
 
 // Mock Radix UI DropdownMenu so items are always visible without pointer-event gymnastics
@@ -102,6 +103,7 @@ beforeEach(() => {
   localStorage.clear();
   setupImageMock();
   mockToPng.mockResolvedValue("data:image/png;base64,fakedata");
+  mockToJpeg.mockResolvedValue("data:image/jpeg;base64,fakedata");
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeOkResponse(emptyDayData)));
 });
 
@@ -234,19 +236,89 @@ describe("DailyLogsPage – PNG export (no unsaved changes)", () => {
     await waitFor(() => expect(mockToPng).toHaveBeenCalled());
     expect(paddingDuringCapture).toBe("32px");
   });
+
+  it("passes pixelRatio:1 to toPng for PNG", async () => {
+    render(<DailyLogsPage />);
+    await waitForLoad();
+    fireEvent.click(screen.getByText("dailyLogs.exportAsPng"));
+    await waitFor(() => expect(mockToPng).toHaveBeenCalled());
+    expect(mockToPng).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ pixelRatio: 1 })
+    );
+  });
+
+  it("summary card wrapper position is overridden to relative during PNG capture when pinned", async () => {
+    let positionDuringCapture: string | undefined;
+    mockToPng.mockImplementation(async () => {
+      const wrapper = document.querySelector("[data-testid='summary-card-wrapper']") as HTMLElement | null;
+      positionDuringCapture = wrapper?.style.position;
+      return "data:image/png;base64,fakedata";
+    });
+    render(<DailyLogsPage />);
+    await waitForLoad();
+    fireEvent.click(screen.getByTestId("pin-summary-btn")); // pin it
+    fireEvent.click(screen.getByText("dailyLogs.exportAsPng"));
+    await waitFor(() => expect(mockToPng).toHaveBeenCalled());
+    expect(positionDuringCapture).toBe("relative");
+  });
+
+  it("summary card wrapper position is restored after PNG capture", async () => {
+    render(<DailyLogsPage />);
+    await waitForLoad();
+    fireEvent.click(screen.getByTestId("pin-summary-btn")); // pin it
+    fireEvent.click(screen.getByText("dailyLogs.exportAsPng"));
+    await waitFor(() => expect(mockToPng).toHaveBeenCalled());
+    const wrapper = screen.getByTestId("summary-card-wrapper") as HTMLElement;
+    // After export, inline position override should be cleared
+    expect(wrapper.style.position).toBe("");
+  });
 });
 
 // ===========================================================================
 // PDF export – clean state
 // ===========================================================================
 describe("DailyLogsPage – PDF export (no unsaved changes)", () => {
-  it("calls toPng and jsPDF when PDF export item is clicked", async () => {
+  it("calls toJpeg and jsPDF when PDF export item is clicked", async () => {
     render(<DailyLogsPage />);
     await waitForLoad();
     fireEvent.click(screen.getByText("dailyLogs.exportAsPdf"));
     await waitFor(() => expect(MockJsPDF).toHaveBeenCalledTimes(1));
+    expect(mockToJpeg).toHaveBeenCalledTimes(1);
+    expect(mockToPng).not.toHaveBeenCalled();
     expect(mockJsPdfAddImage).toHaveBeenCalledTimes(1);
     expect(mockJsPdfSave).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes pixelRatio:1 and quality:0.85 to toJpeg for PDF", async () => {
+    render(<DailyLogsPage />);
+    await waitForLoad();
+    fireEvent.click(screen.getByText("dailyLogs.exportAsPdf"));
+    await waitFor(() => expect(mockToJpeg).toHaveBeenCalled());
+    expect(mockToJpeg).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ pixelRatio: 1, quality: 0.85 })
+    );
+  });
+
+  it("embeds JPEG (not PNG) image format in the PDF", async () => {
+    render(<DailyLogsPage />);
+    await waitForLoad();
+    fireEvent.click(screen.getByText("dailyLogs.exportAsPdf"));
+    await waitFor(() => expect(mockJsPdfAddImage).toHaveBeenCalled());
+    expect(mockJsPdfAddImage).toHaveBeenCalledWith(
+      expect.any(String), "JPEG", 0, 0, expect.any(Number), expect.any(Number)
+    );
+  });
+
+  it("creates jsPDF with compress:true", async () => {
+    render(<DailyLogsPage />);
+    await waitForLoad();
+    fireEvent.click(screen.getByText("dailyLogs.exportAsPdf"));
+    await waitFor(() => expect(MockJsPDF).toHaveBeenCalled());
+    expect(MockJsPDF).toHaveBeenCalledWith(
+      expect.objectContaining({ compress: true })
+    );
   });
 
   it("jsPDF save filename contains the current date", async () => {

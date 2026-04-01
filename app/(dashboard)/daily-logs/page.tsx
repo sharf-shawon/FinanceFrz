@@ -222,6 +222,7 @@ export default function DailyLogsPage() {
   const exportHeaderRef = useRef<HTMLDivElement>(null);
   const exportFooterRef = useRef<HTMLDivElement>(null);
   const exportSiteUrlRef = useRef<HTMLSpanElement>(null);
+  const summaryCardWrapperRef = useRef<HTMLDivElement>(null);
 
   // Modal states
   const [navGuardOpen, setNavGuardOpen] = useState(false);
@@ -457,18 +458,29 @@ export default function DailyLogsPage() {
     node.style.padding = "32px";
     node.style.backgroundColor = isDark ? EXPORT_DARK_BG : "#ffffff";
 
+    // If the summary card is pinned (position: fixed), temporarily reset it to
+    // relative so it renders in normal document flow inside the captured canvas.
+    const summaryWrapper = summaryCardWrapperRef.current;
+    const origSummaryPosition = summaryWrapper ? summaryWrapper.style.position : "";
+    if (summaryWrapper && isSummaryPinned) {
+      summaryWrapper.style.position = "relative";
+    }
+
     setExporting(true);
     setExportError("");
     try {
-      const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(node, { cacheBust: true });
-
       if (format === "png") {
+        const { toPng } = await import("html-to-image");
+        // pixelRatio:1 avoids capturing at 2× on retina screens, keeping file size reasonable
+        const dataUrl = await toPng(node, { cacheBust: true, pixelRatio: 1 });
         const link = document.createElement("a");
         link.download = `daily-log-${currentDate}.png`;
         link.href = dataUrl;
         link.click();
       } else {
+        // Use JPEG (quality 0.85) for PDF to keep file size well under 1 MB
+        const { toJpeg } = await import("html-to-image");
+        const dataUrl = await toJpeg(node, { cacheBust: true, pixelRatio: 1, quality: 0.85 });
         const { jsPDF } = await import("jspdf");
         const img = new Image();
         img.src = dataUrl;
@@ -478,8 +490,8 @@ export default function DailyLogsPage() {
         });
         const { width: pxWidth, height: pxHeight } = img;
         const orientation = pxWidth > pxHeight ? "landscape" : "portrait";
-        const pdf = new jsPDF({ orientation, unit: "px", format: [pxWidth, pxHeight] });
-        pdf.addImage(dataUrl, "PNG", 0, 0, pxWidth, pxHeight);
+        const pdf = new jsPDF({ orientation, unit: "px", format: [pxWidth, pxHeight], compress: true });
+        pdf.addImage(dataUrl, "JPEG", 0, 0, pxWidth, pxHeight);
         pdf.save(`daily-log-${currentDate}.pdf`);
       }
     } catch {
@@ -490,6 +502,7 @@ export default function DailyLogsPage() {
       if (exportFooterRef.current) exportFooterRef.current.style.display = "none";
       node.style.padding = origPadding;
       node.style.backgroundColor = origBg;
+      if (summaryWrapper) summaryWrapper.style.position = origSummaryPosition;
       setExporting(false);
     }
   }
@@ -880,6 +893,7 @@ export default function DailyLogsPage() {
 
           {/* Footer summary – pinnable to viewport bottom */}
           <div
+            ref={summaryCardWrapperRef}
             className={cn(
               isSummaryPinned && "fixed bottom-0 left-0 right-0 z-50 md:left-64 animate-in slide-in-from-bottom duration-300"
             )}
@@ -907,7 +921,7 @@ export default function DailyLogsPage() {
                   }
                 </Button>
 
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2 text-sm pr-8">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("previousBalance")}</span>
                     <span className="tabular-nums font-medium">
