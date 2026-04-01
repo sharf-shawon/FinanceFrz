@@ -196,6 +196,11 @@
     "exportButton": "Export",
     "exportAsPng": "Export as PNG",
     "exportAsPdf": "Export as PDF",
-    "exporting": "Exporting…"
+    "exporting": "Exporting…",
+    "exportUnsavedTitle": "Unsaved Changes",
+    "exportUnsavedDesc": "Your log has unsaved changes. Save before exporting to include the latest data.",
+    "saveAndExport": "Save & Export",
+    "pinSummary": "Pin summary to footer",
+    "unpinSummary": "Unpin summary"
   }
 }

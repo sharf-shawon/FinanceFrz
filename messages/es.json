@@ -196,6 +196,11 @@
     "exportButton": "Exportar",
     "exportAsPng": "Exportar como PNG",
     "exportAsPdf": "Exportar como PDF",
-    "exporting": "Exportando…"
+    "exporting": "Exportando…",
+    "exportUnsavedTitle": "Cambios Sin Guardar",
+    "exportUnsavedDesc": "Tu registro tiene cambios sin guardar. Guárdalos antes de exportar para incluir los datos más recientes.",
+    "saveAndExport": "Guardar y Exportar",
+    "pinSummary": "Fijar resumen al pie",
+    "unpinSummary": "Desfijar resumen"
   }
 }
