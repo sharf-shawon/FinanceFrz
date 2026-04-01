@@ -13,7 +13,13 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, AlertTriangle, Download } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatCurrency } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -195,8 +201,12 @@ export default function DailyLogsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [exportError, setExportError] = useState("");
+
+  const exportContentRef = useRef<HTMLDivElement>(null);
 
   // Modal states
   const [navGuardOpen, setNavGuardOpen] = useState(false);
@@ -403,6 +413,51 @@ export default function DailyLogsPage() {
     loadData(currentDate);
   }
 
+  async function handleExportPng() {
+    if (!exportContentRef.current) return;
+    setExporting(true);
+    setExportError("");
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(exportContentRef.current, { cacheBust: true });
+      const link = document.createElement("a");
+      link.download = `daily-log-${currentDate}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      setExportError(tc("error"));
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleExportPdf() {
+    if (!exportContentRef.current) return;
+    setExporting(true);
+    setExportError("");
+    try {
+      const { toPng } = await import("html-to-image");
+      const { jsPDF } = await import("jspdf");
+      const dataUrl = await toPng(exportContentRef.current, { cacheBust: true });
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Image failed to load"));
+      });
+      const pxWidth = img.width;
+      const pxHeight = img.height;
+      const orientation = pxWidth > pxHeight ? "landscape" : "portrait";
+      const pdf = new jsPDF({ orientation, unit: "px", format: [pxWidth, pxHeight] });
+      pdf.addImage(dataUrl, "PNG", 0, 0, pxWidth, pxHeight);
+      pdf.save(`daily-log-${currentDate}.pdf`);
+    } catch {
+      setExportError(tc("error"));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Nav guard modal actions
   // ---------------------------------------------------------------------------
@@ -599,6 +654,12 @@ export default function DailyLogsPage() {
         </p>
       )}
 
+      {exportError && (
+        <p className="text-sm text-destructive" role="alert" data-testid="export-error">
+          {exportError}
+        </p>
+      )}
+
       {/* Date navigation */}
       <Card>
         <CardContent className="pt-4">
@@ -638,7 +699,7 @@ export default function DailyLogsPage() {
       {loading ? (
         <div className="py-12 text-center text-muted-foreground">{tc("loading")}</div>
       ) : (
-        <>
+        <div ref={exportContentRef} className="space-y-6">
           {/* Income section */}
           <Card>
             <CardHeader className="pb-3">
@@ -757,13 +818,29 @@ export default function DailyLogsPage() {
                     {t("discard")}
                   </Button>
                 )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={exporting} aria-label={t("exportButton")}>
+                      <Download className="h-4 w-4 mr-2" />
+                      {exporting ? t("exporting") : t("exportButton")}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleExportPng}>
+                      {t("exportAsPng")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportPdf}>
+                      {t("exportAsPdf")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button onClick={handleSave} disabled={saving}>
                   {saving ? tc("saving") : tc("save")}
                 </Button>
               </div>
             </CardContent>
           </Card>
-        </>
+        </div>
       )}
 
       {/* Nav-guard modal */}

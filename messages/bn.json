@@ -192,6 +192,10 @@
     "unsavedChanges": "আপনার অসংরক্ষিত পরিবর্তন রয়েছে।",
     "unsavedChangesTitle": "অসংরক্ষিত পরিবর্তন",
     "unsavedChangesDesc": "আপনার অসংরক্ষিত পরিবর্তন রয়েছে। চলে যাওয়ার আগে কি সংরক্ষণ করবেন নাকি বাতিল করবেন?",
-    "stayOnPage": "এই পাতায় থাকুন"
+    "stayOnPage": "এই পাতায় থাকুন",
+    "exportButton": "এক্সপোর্ট",
+    "exportAsPng": "PNG হিসেবে এক্সপোর্ট",
+    "exportAsPdf": "PDF হিসেবে এক্সপোর্ট",
+    "exporting": "এক্সপোর্ট হচ্ছে…"
   }
 }

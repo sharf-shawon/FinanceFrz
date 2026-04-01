@@ -192,6 +192,10 @@
     "unsavedChanges": "Tienes cambios sin guardar.",
     "unsavedChangesTitle": "Cambios Sin Guardar",
     "unsavedChangesDesc": "Tienes cambios sin guardar. ¿Deseas guardarlos o descartarlos antes de salir?",
-    "stayOnPage": "Quedarse en la página"
+    "stayOnPage": "Quedarse en la página",
+    "exportButton": "Exportar",
+    "exportAsPng": "Exportar como PNG",
+    "exportAsPdf": "Exportar como PDF",
+    "exporting": "Exportando…"
   }
 }

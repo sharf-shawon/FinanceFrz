@@ -192,6 +192,10 @@
     "unsavedChanges": "You have unsaved changes.",
     "unsavedChangesTitle": "Unsaved Changes",
     "unsavedChangesDesc": "You have unsaved changes. Do you want to save or discard them before leaving?",
-    "stayOnPage": "Stay on page"
+    "stayOnPage": "Stay on page",
+    "exportButton": "Export",
+    "exportAsPng": "Export as PNG",
+    "exportAsPdf": "Export as PDF",
+    "exporting": "Exporting…"
   }
 }
